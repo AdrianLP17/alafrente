@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#160d2e">
+<title>¡A la Frente!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#160d2e; --bg2:#21143f; --card:#2b1b52; --card2:#36246a; --ink:#fff7ec; --muted:#b9abdf;
+  --ok:#19c37d; --pass:#ff8a1f; --accent:#ffd23f; --pink:#ff4f8b; --line:rgba(255,255,255,.08);
+  --st:env(safe-area-inset-top); --sb:env(safe-area-inset-bottom); --sl:env(safe-area-inset-left); --sr:env(safe-area-inset-right);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Bricolage Grotesque',system-ui,sans-serif;overflow:hidden;user-select:none;-webkit-user-select:none}
+button{font:inherit;color:inherit;cursor:pointer;border:none;background:none}
+input,textarea{font:inherit;color:var(--ink);background:var(--bg2);border:2px solid var(--line);border-radius:14px;padding:12px 14px;width:100%;outline:none;user-select:text;-webkit-user-select:text}
+input:focus,textarea:focus{border-color:var(--accent)}
+.screen{position:fixed;inset:0;display:none;flex-direction:column;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:calc(var(--st) + 12px) calc(var(--sr) + 16px) calc(var(--sb) + 20px) calc(var(--sl) + 16px)}
+.screen.active{display:flex}
+.wrap{width:100%;max-width:760px;margin:0 auto}
+
+/* top bar */
+.bar{display:flex;align-items:center;gap:10px;margin-bottom:14px;min-height:46px}
+.bar h2{font-size:22px;font-weight:800;flex:1;letter-spacing:-.3px}
+.back{width:46px;height:46px;border-radius:50%;background:var(--card);display:grid;place-items:center;font-size:22px;font-weight:800;flex-shrink:0}
+.back:active{transform:scale(.92)}
+.icon-btn{height:44px;min-width:44px;padding:0 12px;border-radius:999px;background:var(--card);display:flex;align-items:center;gap:6px;font-weight:700;font-size:14px}
+.icon-btn:active{transform:scale(.95)}
+
+/* home */
+.logo{flex:1;font-size:clamp(26px,7vw,36px);font-weight:800;letter-spacing:-1px;line-height:1}
+.logo span{color:var(--accent)}
+.tagline{color:var(--muted);font-size:14px;margin:-6px 0 14px}
+.teambar{display:flex;align-items:center;gap:8px;background:var(--card);border-radius:18px;padding:10px 12px;margin-bottom:14px;overflow-x:auto}
+.teambar .lbl{font-size:13px;color:var(--muted);font-weight:700;white-space:nowrap}
+.tchip{display:flex;align-items:center;gap:6px;background:var(--bg2);border-radius:999px;padding:5px 10px 5px 6px;font-weight:700;font-size:14px;white-space:nowrap;border:2px solid transparent}
+.tchip.cur{border-color:var(--accent)}
+.tchip .e{font-size:20px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:6px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{background:var(--card);border-radius:999px;padding:9px 16px;font-weight:700;font-size:14px;white-space:nowrap;border:2px solid transparent}
+.chip.on{border-color:var(--accent);color:var(--accent)}
+.sec-title{font-size:13px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin:18px 2px 10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:12px}
+.cat{border-radius:20px;padding:14px;min-height:112px;text-align:left;color:#1b1035;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 5px 0 rgba(0,0,0,.28);transition:transform .08s;position:relative;overflow:hidden}
+.cat:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.28)}
+.cat .emo{font-size:32px;line-height:1}
+.cat .name{font-weight:800;font-size:17px;line-height:1.1}
+.cat .count{font-size:12px;font-weight:700;opacity:.62;margin-top:2px}
+.cat.new{background:transparent;border:2px dashed var(--muted);color:var(--muted);box-shadow:none;align-items:center;justify-content:center;text-align:center;gap:6px}
+.cat.new .emo{font-size:28px}
+.foot{color:var(--muted);font-size:12px;text-align:center;margin-top:26px;opacity:.7}
+
+/* panels */
+.panel{background:var(--card);border-radius:20px;padding:16px;margin-bottom:12px}
+.panel h3{font-size:16px;font-weight:800;margin-bottom:10px}
+.panel p.help{color:var(--muted);font-size:13px;margin-top:8px;line-height:1.4}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{background:var(--bg2);border-radius:12px;padding:10px 14px;font-weight:700;font-size:15px;border:2px solid transparent;flex:1;min-width:64px}
+.seg button.on{border-color:var(--accent);color:var(--accent)}
+.toggle{display:flex;align-items:center;justify-content:space-between;padding:6px 0;font-weight:700}
+.sw{width:54px;height:32px;border-radius:999px;background:var(--bg2);position:relative;transition:.2s;flex-shrink:0}
+.sw::after{content:"";position:absolute;top:4px;left:4px;width:24px;height:24px;border-radius:50%;background:var(--muted);transition:.2s}
+.sw.on{background:var(--ok)}
+.sw.on::after{left:26px;background:#fff}
+.toggle small{display:block;color:var(--muted);font-weight:500;font-size:13px}
+
+/* teams */
+.team-row{display:flex;align-items:center;gap:10px;background:var(--bg2);border-radius:16px;padding:10px;margin-bottom:8px}
+.team-row .emo-btn{width:52px;height:52px;border-radius:14px;font-size:30px;display:grid;place-items:center;flex-shrink:0}
+.team-row input{padding:10px 12px;background:var(--card)}
+.team-row .del{width:40px;height:40px;border-radius:12px;background:var(--card);font-size:18px;flex-shrink:0}
+.big-btn{background:var(--accent);color:#1b1035;border-radius:999px;padding:17px 40px;font-size:21px;font-weight:800;box-shadow:0 6px 0 #b8920f}
+.big-btn:active{transform:translateY(4px);box-shadow:0 2px 0 #b8920f}
+.ghost-btn{background:var(--card2);border-radius:999px;padding:15px 26px;font-size:17px;font-weight:800}
+.ghost-btn:active{transform:scale(.97)}
+.danger{color:#ff8b8b}
+.add-btn{width:100%;border:2px dashed var(--muted);border-radius:16px;padding:12px;color:var(--muted);font-weight:800}
+
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(10,5,25,.75);display:none;align-items:flex-end;justify-content:center;z-index:50;backdrop-filter:blur(4px)}
+.modal.active{display:flex}
+.sheet{background:var(--bg2);width:100%;max-width:560px;border-radius:26px 26px 0 0;padding:18px 16px calc(var(--sb) + 18px);max-height:85vh;overflow-y:auto}
+.sheet h3{font-size:19px;font-weight:800;margin-bottom:12px;text-align:center}
+.emo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:6px}
+.emo-grid button{font-size:30px;height:56px;border-radius:14px;background:var(--card)}
+.emo-grid button.on{outline:3px solid var(--accent)}
+.color-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:14px 0}
+.color-row button{width:38px;height:38px;border-radius:50%;border:3px solid transparent}
+.color-row button.on{border-color:#fff}
+.center-col{display:flex;flex-direction:column;gap:10px;align-items:stretch}
+
+/* ready */
+#ready .wrap{flex:1;display:flex;flex-direction:column}
+.ready-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px;padding:10px 0}
+.turn{display:flex;align-items:center;gap:10px;padding:10px 18px;border-radius:999px;font-weight:800;font-size:18px;color:#1b1035;margin-bottom:8px}
+.turn .e{font-size:28px}
+.ready-cat{font-size:clamp(30px,8vw,54px);font-weight:800;line-height:1.05;letter-spacing:-1px}
+.ready-cat .e{display:block;font-size:64px;margin-bottom:6px;animation:bob 1.8s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-8px) rotate(-6deg)}}
+.ready-info{color:var(--muted);font-size:16px;max-width:480px;margin:10px 0 16px;line-height:1.4}
+.sensor{font-size:14px;font-weight:700;padding:8px 14px;border-radius:999px;background:var(--card);margin-bottom:18px}
+.sensor.ok{color:var(--ok)} .sensor.warn{color:var(--accent)}
+.ready-meta{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:18px}
+.ready-meta span{background:var(--card);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:700;color:var(--muted)}
+
+/* countdown + game */
+#countdown{align-items:center;justify-content:center;text-align:center}
+#countdown .num{font-size:min(48vh,40vw);font-weight:800;line-height:1;color:var(--accent);animation:pop .9s ease-out}
+@keyframes pop{0%{transform:scale(1.6);opacity:0}30%{transform:scale(1);opacity:1}}
+#countdown .hint{color:var(--muted);font-size:20px;font-weight:700}
+#game{background:var(--pink);align-items:center;justify-content:center;text-align:center;overflow:hidden;padding:0}
+.g-top{position:absolute;top:calc(var(--st) + 10px);left:calc(var(--sl) + 12px);right:calc(var(--sr) + 12px);display:flex;align-items:center;justify-content:space-between;z-index:5;pointer-events:none}
+.g-top > *{pointer-events:auto}
+.g-left{display:flex;align-items:center;gap:8px}
+.pause{width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,.22);font-size:18px;font-weight:800}
+.g-team{font-size:clamp(13px,3.5vh,17px);font-weight:800;opacity:.9;background:rgba(0,0,0,.15);border-radius:999px;padding:6px 12px}
+.timer{font-size:clamp(22px,6vh,38px);font-weight:800;background:rgba(0,0,0,.22);padding:2px 18px;border-radius:999px;position:absolute;left:50%;transform:translateX(-50%)}
+.timer.low{background:#fff;color:var(--pink);animation:pulse .5s infinite alternate}
+@keyframes pulse{to{transform:translateX(-50%) scale(1.1)}}
+.g-score{font-size:clamp(18px,5vh,30px);font-weight:800;background:rgba(0,0,0,.15);border-radius:999px;padding:4px 14px}
+#word{font-size:clamp(36px,13vmin,124px);font-weight:800;line-height:1.02;letter-spacing:-1px;padding:0 6vw;max-width:100%;overflow-wrap:break-word;text-shadow:0 4px 0 rgba(0,0,0,.18);position:relative;z-index:2;pointer-events:none}
+.g-cat{position:absolute;bottom:calc(var(--sb) + 12px);left:50%;transform:translateX(-50%);font-size:14px;font-weight:700;opacity:.75;z-index:2;pointer-events:none;white-space:nowrap}
+.tapzones{position:absolute;inset:0;display:flex;z-index:1}
+.tapzones div{flex:1}
+.taplabels{position:absolute;bottom:calc(var(--sb) + 12px);left:calc(var(--sl) + 16px);right:calc(var(--sr) + 16px);display:flex;justify-content:space-between;font-size:13px;font-weight:800;opacity:.7;pointer-events:none;z-index:2}
+#fb{position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-size:clamp(48px,18vmin,150px);font-weight:800;letter-spacing:-2px;z-index:10}
+#fb.ok{display:flex;background:var(--ok)} #fb.pass{display:flex;background:var(--pass)} #fb.time{display:flex;background:#3b2a73}
+
+/* results */
+#results .wrap{text-align:center}
+.res-team{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:999px;color:#1b1035;font-weight:800;margin-bottom:6px}
+.total{font-size:clamp(80px,22vw,130px);font-weight:800;color:var(--accent);line-height:1}
+.sub{color:var(--muted);margin-bottom:6px}
+.edit-hint{color:var(--muted);font-size:12px;margin-bottom:12px;opacity:.8}
+.reslist{display:flex;flex-direction:column;gap:6px;margin:0 auto 18px;max-width:520px;text-align:left}
+.reslist button{padding:11px 14px;border-radius:12px;font-weight:700;font-size:16px;display:flex;justify-content:space-between;width:100%}
+.reslist .r-ok{background:rgba(25,195,125,.18);color:#7ff0bd}
+.reslist .r-pass{background:rgba(255,138,31,.12);color:#ffbf85}
+.reslist .r-pass span:first-child{text-decoration:line-through;text-decoration-thickness:1px}
+.board{max-width:520px;margin:0 auto 18px;text-align:left}
+.board-row{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:14px;padding:10px 14px;margin-bottom:6px;font-weight:800}
+.board-row .e{font-size:24px}
+.board-row .n{flex:1}
+.board-row .pts{font-size:22px;color:var(--accent)}
+.board-row.cur{outline:2px solid var(--accent)}
+.row-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:10px}
+
+/* podium */
+#final .wrap{text-align:center}
+#final h1{font-size:clamp(30px,8vw,48px);font-weight:800;margin:6px 0 2px}
+.winner-emo{font-size:96px;animation:bob 1.4s ease-in-out infinite;display:block;margin-top:10px}
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:8px;margin:18px auto;max-width:440px}
+.pod{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.pod .e{font-size:34px}
+.pod .n{font-weight:800;font-size:14px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pod .blk{width:100%;border-radius:14px 14px 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:8px;font-size:26px;font-weight:800;color:#1b1035}
+canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:60}
+
+/* pause modal */
+.pause-sheet{background:var(--bg2);border-radius:26px;padding:22px;max-width:380px;width:90%;text-align:center;margin:auto}
+.pause-sheet h3{font-size:24px;font-weight:800;margin-bottom:16px}
+
+.rules-list{padding-left:24px;display:flex;flex-direction:column;gap:12px;font-size:16px;line-height:1.45;color:var(--muted)}
+.rules-list b{color:var(--ink)}
+.rules-list li::marker{color:var(--accent);font-weight:800}
+.toast{position:fixed;left:50%;bottom:calc(var(--sb) + 24px);transform:translateX(-50%) translateY(120px);background:#fff;color:#1b1035;font-weight:800;padding:12px 20px;border-radius:999px;z-index:80;transition:transform .3s}
+.toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<section id="home" class="screen active"><div class="wrap">
+  <div class="bar">
+    <div class="logo">¡A la <span>Frente!</span></div>
+    <button class="icon-btn" data-go="rules" aria-label="Normas">📜</button>
+    <button class="icon-btn" data-go="settings" aria-label="Ajustes">⚙️</button>
+  </div>
+  <p class="tagline">Famosos, pelis, animales y mucho más. ¡Ponte el móvil en la frente!</p>
+  <div class="teambar" id="teambar"></div>
+  <div class="chips" id="filters"></div>
+  <div id="sections"></div>
+  <p class="foot">Inclina arriba = acierto · abajo = paso · o toca derecha / izquierda</p>
+</div></section>
+
+<!-- TEAMS -->
+<section id="teams" class="screen"><div class="wrap">
+  <div class="bar"><button class="back" data-back>←</button><h2>Equipos</h2></div>
+  <div class="panel">
+    <h3>¿Cómo jugáis?</h3>
+    <div class="seg" id="modeSeg">
+      <button data-m="solo">🎯 Partida libre</button>
+      <button data-m="teams">🏆 Por equipos</button>
+    </div>
+    <p class="help" id="modeHelp"></p>
+  </div>
+  <div id="teamsBlock">
+    <div class="panel">
+      <h3>Número de equipos</h3>
+      <div class="seg" id="nTeamsSeg"></div>
+    </div>
+    <div class="panel">
+      <h3>Nombre y emoji de cada equipo</h3>
+      <div id="teamList"></div>
+      <p class="help">Toca el emoji para cambiarlo y elegir un color.</p>
+    </div>
+    <div class="panel">
+      <h3>Rondas por equipo</h3>
+      <div class="seg" id="roundsSeg"></div>
+      <p class="help">Al terminar todas las rondas sale el podio con el ganador.</p>
+    </div>
+    <div class="panel">
+      <h3>Marcador</h3>
+      <div id="teamBoard"></div>
+      <button class="add-btn danger" id="resetScores" style="margin-top:6px">↺ Reiniciar marcador</button>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:6px"><button class="big-btn" data-back>¡Listo!</button></div>
+</div></section>
+
+<!-- SETTINGS -->
+<section id="settings" class="screen"><div class="wrap">
+  <div class="bar"><button class="back" data-back>←</button><h2>Ajustes</h2></div>
+  <div class="panel"><h3>⏱️ Tiempo por ronda</h3><div class="seg" id="timeSeg"></div></div>
+  <div class="panel"><h3>📐 Sensibilidad del movimiento</h3><div class="seg" id="sensSeg"></div>
+    <p class="help">Si detecta aciertos sin querer, bájala. Si cuesta que reaccione, súbela.</p></div>
+  <div class="panel">
+    <div class="toggle"><div>🔄 Invertir gestos<small>Arriba = paso, abajo = acierto (como el Heads Up original)</small></div><button class="sw" id="swInvert"></button></div>
+    <div class="toggle"><div>🎵 Música</div><button class="sw" id="swMusic"></button></div>
+    <div class="toggle"><div>🔊 Efectos de sonido</div><button class="sw" id="swSound"></button></div>
+    <div class="toggle"><div>📳 Vibración</div><button class="sw" id="swVibe"></button></div>
+    <div class="toggle"><div>🔁 Evitar repetir tarjetas<small>No vuelven a salir hasta agotar la categoría</small></div><button class="sw" id="swNoRepeat"></button></div>
+  </div>
+  <div class="panel"><button class="add-btn" id="resetUsed">↺ Olvidar tarjetas ya jugadas</button></div>
+</div></section>
+
+<!-- RULES -->
+<section id="rules" class="screen"><div class="wrap">
+  <div class="bar"><button class="back" data-back>←</button><h2>📜 Normas</h2></div>
+  <div class="panel">
+  <ol class="rules-list">
+    <li><b>Haced equipos</b> (o jugad cada uno por su cuenta). En cada turno, una persona se pone el móvil en la frente.</li>
+    <li><b>Móvil en horizontal en la frente</b>, con la pantalla mirando a los demás. ¡El que lo lleva no puede mirar!</li>
+    <li><b>Tu equipo te da pistas</b> para que adivines lo que sale.</li>
+    <li><b>Prohibido decir la palabra</b> ni trozos de ella (si sale «Harry Potter», no vale decir «Potter»). Tampoco vale deletrear, decir la primera letra ni traducirla a otro idioma.</li>
+    <li>En <b>Mímica</b> solo se actúa: nada de hablar ni hacer ruidos.</li>
+    <li><b>Inclina hacia arriba</b> (pantalla al techo) si aciertas: <b style="color:var(--ok)">+1 punto</b>.</li>
+    <li><b>Inclina hacia abajo</b> (pantalla al suelo) para pasar. Pasar no resta, pero pierdes tiempo.</li>
+    <li>Si el sensor no va: <b>toca la derecha</b> para acierto y <b>la izquierda</b> para pasar.</li>
+    <li>Al acabar, <b>revisad la lista</b>: si el sensor se ha equivocado, tocad la palabra para corregirla.</li>
+    <li><b>Gana</b> el equipo con más puntos al terminar las rondas. En caso de empate, ronda de desempate a 30 segundos.</li>
+  </ol></div>
+  <div style="text-align:center;margin-top:6px"><button class="big-btn" data-back>¡Entendido!</button></div>
+</div></section>
+
+<!-- CUSTOM -->
+<section id="custom" class="screen"><div class="wrap">
+  <div class="bar"><button class="back" data-back>←</button><h2 id="customTitle">Crear categoría</h2></div>
+  <div class="panel">
+    <h3>Nombre</h3>
+    <div style="display:flex;gap:8px"><button class="emo-btn" id="customEmo" style="width:52px;height:52px;border-radius:14px;background:var(--bg2);font-size:28px;flex-shrink:0">✏️</button>
+    <input id="customName" maxlength="30" placeholder="Ej: Gente de la oficina"></div>
+  </div>
+  <div class="panel">
+    <h3>Palabras (una por línea)</h3>
+    <textarea id="customWords" rows="10" placeholder="Pepe el de contabilidad&#10;La máquina de café&#10;El viernes"></textarea>
+    <p class="help" id="customCount">0 palabras · mínimo 5</p>
+  </div>
+  <div class="center-col">
+    <button class="big-btn" id="customSave">Guardar</button>
+    <button class="ghost-btn danger" id="customDelete">Eliminar categoría</button>
+  </div>
+</div></section>
+
+<!-- READY -->
+<section id="ready" class="screen"><div class="wrap">
+  <div class="bar"><button class="back" data-back>←</button><h2></h2><button class="icon-btn" id="editCustom" style="display:none">✎ Editar</button></div>
+  <div class="ready-body">
+    <div class="turn" id="readyTurn"></div>
+    <div class="ready-cat" id="readyCat"></div>
+    <p class="ready-info">Pulsa empezar y ponte el móvil en la frente, en horizontal, con la pantalla hacia tus amigos.</p>
+    <div class="ready-meta" id="readyMeta"></div>
+    <div class="sensor" id="sensorStatus">Comprobando sensor…</div>
+    <button class="big-btn" id="startBtn">¡Empezar!</button>
+  </div>
+</div></section>
+
+<!-- COUNTDOWN -->
+<section id="countdown" class="screen">
+  <div class="num" id="cdNum">3</div>
+  <div class="hint">¡Colócalo en la frente!</div>
+</section>
+
+<!-- GAME -->
+<section id="game" class="screen">
+  <div class="g-top">
+    <div class="g-left"><button class="pause" id="pauseBtn" aria-label="Pausa">⏸</button><span class="g-team" id="gTeam"></span></div>
+    <div class="timer" id="timer">60</div>
+    <div class="g-score" id="gScore">0</div>
+  </div>
+  <div id="word"></div>
+  <div class="g-cat" id="gCat"></div>
+  <div class="tapzones"><div id="tapLeft"></div><div id="tapRight"></div></div>
+  <div class="taplabels" id="taplabels"><span>◀ PASO</span><span>ACIERTO ▶</span></div>
+  <div id="fb"></div>
+</section>
+
+<!-- RESULTS -->
+<section id="results" class="screen"><div class="wrap">
+  <div class="bar"><button class="back" data-home>←</button><h2></h2></div>
+  <div class="res-team" id="resTeam"></div>
+  <div class="total" id="resTotal">0</div>
+  <div class="sub" id="resSub"></div>
+  <div class="edit-hint">Toca una palabra para corregirla si el sensor se equivocó</div>
+  <div class="reslist" id="resList"></div>
+  <div class="board" id="resBoard"></div>
+  <div class="row-btns">
+    <button class="big-btn" id="nextBtn">Otra vez</button>
+  </div>
+  <div class="row-btns"><button class="ghost-btn" id="changeCatBtn">Cambiar categoría</button></div>
+</div></section>
+
+<!-- FINAL -->
+<section id="final" class="screen"><div class="wrap">
+  <div class="bar"><button class="back" data-home>←</button><h2></h2></div>
+  <span class="winner-emo" id="winEmo">🏆</span>
+  <h1 id="winTitle">¡Ganador!</h1>
+  <div class="sub" id="winSub"></div>
+  <div class="podium" id="podium"></div>
+  <div class="board" id="finalBoard"></div>
+  <div class="row-btns"><button class="big-btn" id="newMatch">Nueva partida</button></div>
+  <div class="row-btns"><button class="ghost-btn" data-home>Inicio</button></div>
+</div></section>
+
+<!-- MODALS -->
+<div class="modal" id="emoModal"><div class="sheet">
+  <h3 id="emoTitle">Elige emoji y color</h3>
+  <div class="color-row" id="colorRow"></div>
+  <div class="emo-grid" id="emoGrid"></div>
+  <div style="text-align:center;margin-top:14px"><button class="big-btn" id="emoDone">Hecho</button></div>
+</div></div>
+
+<div class="modal" id="pauseModal" style="align-items:center"><div class="pause-sheet">
+  <h3>⏸ Pausa</h3>
+  <div class="center-col">
+    <button class="big-btn" id="resumeBtn">Continuar</button>
+    <button class="ghost-btn" id="restartBtn">Reiniciar ronda</button>
+    <button class="ghost-btn danger" id="quitBtn">Salir de la ronda</button>
+  </div>
+</div></div>
+
+<canvas id="confetti"></canvas>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================================
+   DATOS
+   ===================================================== */
+const L=s=>s.split("|");
+const CATS=[
+ // ---------- MUNDO ----------
+ {id:"leyendas",g:"mundo",name:"Leyendas de la música",emo:"🎸",color:"#ffd23f",words:L("Elvis Presley|Michael Jackson|Madonna|The Beatles|Queen|Freddie Mercury|Frank Sinatra|Whitney Houston|Bob Marley|John Lennon|David Bowie|Prince|Tina Turner|Aretha Franklin|Ray Charles|Stevie Wonder|Louis Armstrong|Johnny Cash|Elton John|ABBA|The Rolling Stones|Mick Jagger|Bob Dylan|Jimi Hendrix|Kurt Cobain|Nirvana|AC/DC|Bon Jovi|Bee Gees|Cher|Celine Dion|Mariah Carey|Britney Spears|Amy Winehouse|James Brown|Chuck Berry|Janis Joplin|Pink Floyd|Led Zeppelin|Metallica|Guns N' Roses|Backstreet Boys|Spice Girls|Ricky Martin|Celia Cruz|Juan Gabriel|Bruce Springsteen|Phil Collins|Lionel Richie|Dolly Parton|Eminem|Tupac|Snoop Dogg|U2|Coldplay|Oasis|Kiss|Ozzy Osbourne|Paul McCartney|Marvin Gaye|Village People|Gloria Estefan|Julio Iglesias|Shakira|Luciano Pavarotti")},
+ {id:"pop",g:"mundo",name:"Cantantes de ahora",emo:"🎤",color:"#ff8fb1",words:L("Taylor Swift|Beyoncé|Rihanna|Ed Sheeran|Billie Eilish|Bad Bunny|Dua Lipa|Bruno Mars|The Weeknd|Lady Gaga|Ariana Grande|Justin Bieber|Drake|Karol G|J Balvin|Daddy Yankee|Harry Styles|Adele|Katy Perry|Miley Cyrus|Selena Gomez|Olivia Rodrigo|Sabrina Carpenter|Post Malone|Kanye West|Travis Scott|Doja Cat|Sia|Imagine Dragons|Maroon 5|BTS|Blackpink|Peso Pluma|Bizarrap|Feid|Maluma|Ozuna|Anuel AA|Rauw Alejandro|Nicki Minaj|Cardi B|Shawn Mendes|Camila Cabello|Lana Del Rey|Måneskin|Chappell Roan|Kendrick Lamar|Jennifer Lopez|Pitbull|Luis Fonsi|Marc Anthony|Rosalía|Shakira|David Guetta|Calvin Harris|Avicii|Daft Punk|Tini|Nathy Peluso|Myke Towers|Young Miko|Emilia|Duki|Sebastián Yatra|Morat|Camilo")},
+ {id:"hollywood",g:"mundo",name:"Actores de Hollywood",emo:"🌟",color:"#ffe08a",words:L("Brad Pitt|Leonardo DiCaprio|Tom Cruise|Johnny Depp|Angelina Jolie|Will Smith|Scarlett Johansson|Robert Downey Jr.|Tom Hanks|Julia Roberts|Meryl Streep|Morgan Freeman|Keanu Reeves|Dwayne Johnson «La Roca»|Jennifer Aniston|Margot Robbie|Zendaya|Tom Holland|Ryan Reynolds|Ryan Gosling|Jim Carrey|Adam Sandler|Arnold Schwarzenegger|Sylvester Stallone|Jackie Chan|Bruce Willis|Harrison Ford|Al Pacino|Robert De Niro|Nicole Kidman|Emma Watson|Daniel Radcliffe|Hugh Jackman|Chris Hemsworth|Vin Diesel|Charles Chaplin|Marilyn Monroe|Audrey Hepburn|Jack Nicholson|Denzel Washington|Sandra Bullock|Cameron Diaz|Eddie Murphy|Samuel L. Jackson|Matt Damon|George Clooney|Timothée Chalamet|Pedro Pascal|Jennifer Lawrence|Anne Hathaway|Cillian Murphy|Rowan Atkinson (Mr. Bean)|Clint Eastwood|Nicolas Cage|Antonio Banderas|Penélope Cruz|Javier Bardem|Salma Hayek|Kim Kardashian|Paris Hilton|Jason Statham|Gal Gadot|Emma Stone|Jennifer Lopez|Mel Gibson")},
+ {id:"pelis",g:"mundo",name:"Películas famosas",emo:"🍿",color:"#ff6b6b",words:L("Titanic|Star Wars|Harry Potter|El Señor de los Anillos|Jurassic Park|El Rey León|Toy Story|Frozen|Shrek|Buscando a Nemo|Avatar|Los Vengadores|Spider-Man|Batman|Piratas del Caribe|Regreso al futuro|E.T.|Tiburón|Indiana Jones|Matrix|El Padrino|Forrest Gump|Rocky|Terminator|Pulp Fiction|Gladiator|Grease|Dirty Dancing|Solo en casa|Mamma Mia!|Barbie|Oppenheimer|Los Minions|Gru, mi villano favorito|Coco|Up|Del revés|Ratatouille|Cars|Mulán|Aladdín|La Sirenita|Blancanieves|La Cenicienta|El Exorcista|It|Scream|Fast & Furious|Misión Imposible|James Bond|Top Gun|Kung Fu Panda|Madagascar|Ice Age|Joker|Interstellar|Origen|Los Juegos del Hambre|Crepúsculo|Mary Poppins|King Kong|Los Increíbles|Monstruos S.A.|Encanto|Vaiana|Ocho apellidos vascos|Torrente|Campeones|Lo imposible|La sociedad de la nieve")},
+ {id:"series",g:"mundo",name:"Series de todo el mundo",emo:"📺",color:"#b388ff",words:L("Friends|Juego de Tronos|Breaking Bad|Stranger Things|Los Simpson|The Office|Prison Break|Lost|The Walking Dead|El juego del calamar|Peaky Blinders|Narcos|Dexter|House|Anatomía de Grey|Cómo conocí a vuestra madre|The Big Bang Theory|Modern Family|The Crown|Miércoles|Los Bridgerton|Sherlock|Black Mirror|Los Soprano|Padre de familia|South Park|Futurama|Rick y Morty|The Mandalorian|The Last of Us|Euphoria|Gossip Girl|Glee|Hannah Montana|El Príncipe de Bel-Air|Los vigilantes de la playa|El coche fantástico|Expediente X|Dark|Lupin|Emily en París|The Boys|Vikingos|Suits|One Piece|Naruto|La casa de papel|Élite|Aquí no hay quien viva|La que se avecina|Los Serrano|Física o Química|Merlí|Machos alfa|Berlín|El Ministerio del Tiempo|Velvet|Bob Esponja|Doctor Who|Twin Peaks|Mr. Robot|Sex Education|Shōgun|Yo soy Betty, la fea")},
+ {id:"deportistas",g:"mundo",name:"Estrellas del deporte",emo:"🏆",color:"#8fd3ff",words:L("Messi|Cristiano Ronaldo|Neymar|Mbappé|Haaland|Pelé|Maradona|Zidane|Ronaldinho|Ronaldo Nazário|David Beckham|Michael Jordan|LeBron James|Kobe Bryant|Stephen Curry|Usain Bolt|Michael Phelps|Serena Williams|Roger Federer|Novak Djokovic|Rafa Nadal|Carlos Alcaraz|Tiger Woods|Muhammad Ali|Mike Tyson|Lewis Hamilton|Max Verstappen|Fernando Alonso|Ayrton Senna|Michael Schumacher|Valentino Rossi|Marc Márquez|Simone Biles|Nadia Comăneci|Conor McGregor|Ilia Topuria|Shaquille O'Neal|Tom Brady|Luka Modrić|Vinícius Jr.|Jude Bellingham|Mohamed Salah|Kevin De Bruyne|Lewandowski|Luis Suárez|Thierry Henry|Zlatan Ibrahimović|Buffon|Iker Casillas|Andrés Iniesta|Sergio Ramos|Lamine Yamal|Pau Gasol|Maria Sharapova|Tadej Pogačar|Luka Dončić|Victor Wembanyama|Aitana Bonmatí|Alexia Putellas|Kylian Mbappé|Courtois|Pep Guardiola|Mourinho|Ancelotti")},
+ {id:"historia",g:"mundo",name:"Personajes históricos",emo:"📜",color:"#e8c39e",words:L("Napoleón|Cleopatra|Julio César|Albert Einstein|Isaac Newton|Leonardo da Vinci|Miguel Ángel|Shakespeare|Mozart|Beethoven|Gandhi|Martin Luther King|Nelson Mandela|Abraham Lincoln|George Washington|Juana de Arco|Alejandro Magno|Gengis Kan|Marie Curie|Charles Darwin|Galileo Galilei|Thomas Edison|Nikola Tesla|Marco Polo|Van Gogh|Frida Kahlo|Picasso|Dalí|Steve Jobs|Bill Gates|Walt Disney|Neil Armstrong|Yuri Gagarin|Tutankamón|Buda|Confucio|Sócrates|Platón|Aristóteles|Reina Isabel II|Lady Di|Che Guevara|Simón Bolívar|Madre Teresa|Sigmund Freud|Winston Churchill|John F. Kennedy|Ana Frank|Rosa Parks|Amelia Earhart|Stephen Hawking|Pitágoras|Arquímedes|Cristóbal Colón|Cervantes|Hernán Cortés|El Cid|Isabel la Católica|Goya|Gaudí|Elon Musk|Mark Zuckerberg|Hércules|Zeus|Moisés|Los Reyes Magos")},
+ {id:"ficcion",g:"mundo",name:"Superhéroes y personajes",emo:"🦸",color:"#ff9f43",words:L("Spider-Man|Batman|Superman|Iron Man|Hulk|Capitán América|Thor|Wonder Woman|Lobezno|Deadpool|El Joker|Darth Vader|Yoda|Harry Potter|Hermione|Gandalf|Gollum|Sherlock Holmes|Drácula|Frankenstein|Pinocho|Peter Pan|Caperucita Roja|Mickey Mouse|Bugs Bunny|Homer Simpson|Bob Esponja|Pikachu|Super Mario|Sonic|Lara Croft|Shrek|Barbie|James Bond|Indiana Jones|Rocky Balboa|Jack Sparrow|Elsa|Simba|Tarzán|Robin Hood|El Zorro|Papá Noel|El Ratoncito Pérez|Godzilla|King Kong|E.T.|Chucky|Freddy Krueger|Mr. Bean|Tintín|Astérix y Obélix|Goku|Naruto|Garfield|Scooby-Doo|Minion|Buzz Lightyear|Woody|Stitch|Jessica Rabbit|Don Quijote|Mortadelo y Filemón|Grinch|Hello Kitty|Wally|Pac-Man|Patricio Estrella")},
+ {id:"videojuegos",g:"mundo",name:"Videojuegos",emo:"🎮",color:"#63e6be",words:L("Super Mario|Minecraft|Fortnite|GTA|Pokémon|Tetris|Pac-Man|The Legend of Zelda|EA Sports FC (FIFA)|Call of Duty|Among Us|Roblox|League of Legends|Sonic|Street Fighter|Mortal Kombat|Clash Royale|Candy Crush|Angry Birds|Los Sims|Animal Crossing|Mario Kart|Donkey Kong|Crash Bandicoot|Space Invaders|Counter-Strike|Overwatch|Valorant|God of War|Resident Evil|Halo|Assassin's Creed|Red Dead Redemption|The Last of Us|Rocket League|Fall Guys|Brawl Stars|Subway Surfers|Geometry Dash|Wii Sports|Just Dance|Guitar Hero|Kirby|Metal Gear|Final Fantasy|Elden Ring|Pokémon GO|Flappy Bird|Doom|Super Smash Bros.|Uncharted|Spider-Man (PS)|Clash of Clans|Pro Evolution Soccer|Hogwarts Legacy|Cyberpunk 2077|Tomb Raider|Need for Speed|Gran Turismo|Splatoon")},
+ {id:"marcas",g:"mundo",name:"Marcas",emo:"🛍️",color:"#f783ac",words:L("Apple|Coca-Cola|Nike|Adidas|McDonald's|Google|Amazon|Netflix|Disney|Samsung|IKEA|Lego|Ferrari|Mercedes|BMW|Tesla|Starbucks|Burger King|KFC|Pepsi|Red Bull|Nutella|Kinder|Microsoft|PlayStation|Nintendo|Instagram|TikTok|WhatsApp|YouTube|Spotify|Facebook|Gucci|Louis Vuitton|Chanel|Rolex|Ray-Ban|Converse|Vans|Puma|Levi's|H&M|Primark|Uber|Airbnb|Toyota|Lamborghini|Porsche|Volkswagen|Heineken|Oreo|M&M's|Pringles|Haribo|Domino's|Subway|Shein|Duolingo|ChatGPT|Zara|Mercadona|El Corte Inglés|Chupa Chups|Seat|Cola Cao|Telepizza|Mahou|Estrella Galicia|Movistar|Iberia")},
+ {id:"comidamundo",g:"mundo",name:"Comida del mundo",emo:"🍕",color:"#ffa94d",words:L("Pizza|Hamburguesa|Sushi|Tacos|Burrito|Kebab|Perrito caliente|Ramen|Lasaña|Espaguetis carbonara|Cruasán|Crepes|Gofres|Tortitas|Dónut|Brownie|Tarta de queso|Tiramisú|Helado|Palomitas|Patatas fritas|Nuggets|Alitas de pollo|Fish and chips|Curry|Pad thai|Rollitos de primavera|Ceviche|Guacamole|Nachos|Fondue|Hummus|Falafel|Cuscús|Pato pekinés|Arepa|Sándwich|Macarrones con queso|Bagel|Pretzel|Gyozas|Poke|Sopa de cebolla|Baklava|Magdalena|Cupcake|Macarons|Salchicha alemana|Musaka|Paella|Tortilla de patatas|Gazpacho|Jamón ibérico|Churros con chocolate|Croquetas|Patatas bravas|Pulpo a la gallega|Sangría|Algodón de azúcar|Kiwi|Sandía|Aguacate|Pimiento|Brócoli|Piña")},
+ // ---------- ESPAÑA ----------
+ {id:"cantantes",g:"espana",name:"Cantantes españoles",emo:"🎙️",color:"#ffd23f",words:L("Rosalía|Nusar3000|Alejandro Sanz|David Bisbal|Pablo Alborán|Aitana|Quevedo|C. Tangana|Lola Flores|Rocío Jurado|Raphael|Julio Iglesias|Enrique Iglesias|Camilo Sesto|Isabel Pantoja|Malú|Vanesa Martín|Melendi|Estopa|Manuel Carrasco|David Bustamante|Chenoa|Edurne|Lola Índigo|Ana Mena|Rozalén|Joaquín Sabina|Joan Manuel Serrat|Miguel Bosé|Marta Sánchez|Mónica Naranjo|Rosana|Antonio Orozco|Dani Martín|Amaral|La Oreja de Van Gogh|Mecano|El Canto del Loco|Fito Cabrales|Leiva|Omar Montes|Camela|Los del Río|Niña Pastori|Rosario Flores|Chanel|Blanca Paloma|Ana Guerra|Sergio Dalma|Abraham Mateo|Camarón de la Isla|Paco de Lucía|Alaska|Rels B|Bad Gyal|Bunbury|Melody|Bertín Osborne|Extremoduro|Hombres G|Pastora Soler|Manolo Escobar|Morad|Saiko|Ana Torroja|Mala Rodríguez|Marea")},
+ {id:"actores",g:"espana",name:"Actores españoles",emo:"🎬",color:"#ff8fb1",words:L("Antonio Banderas|Penélope Cruz|Javier Bardem|Úrsula Corberó|Álvaro Morte|Mario Casas|Blanca Suárez|Paco León|Dani Rovira|Santiago Segura|José Coronado|Luis Tosar|Belén Rueda|Maribel Verdú|Elsa Pataky|Paz Vega|Carmen Maura|Imanol Arias|Antonio Resines|Karra Elejalde|Clara Lago|Miguel Herrán|Jaime Lorente|Ester Expósito|Najwa Nimri|Itziar Ituño|Pedro Alonso|Óscar Jaenada|Hugo Silva|Paula Echevarría|Michelle Jenner|Quim Gutiérrez|Ana de Armas|Eduardo Noriega|Fernando Tejero|Belén Cuesta|Javier Cámara|Concha Velasco|Alfredo Landa|Paco Martínez Soria|Lina Morgan|Rossy de Palma|Antonio de la Torre|Inma Cuesta|Carmen Machi|Arón Piper|Macarena García|Pepe Viyuela|Jordi Sánchez|Pablo Chiapella|Mariano Peña|Emilio Gutiérrez Caba|Adriana Ugarte")},
+ {id:"humor",g:"espana",name:"Humoristas",emo:"😂",color:"#a0e7ff",words:L("Chiquito de la Calzada|Martes y Trece|Cruz y Raya|José Mota|Leo Harlem|Dani Martínez|David Broncano|Berto Romero|Ignatius Farray|Faemino y Cansado|Gila|Eugenio|Paz Padilla|Los Morancos|Florentino Fernández|Joaquín Reyes|Raúl Cimas|Goyo Jiménez|Dani Mateo|Quequé|Andreu Buenafuente|Silvia Abril|Arturo Valls|Luis Piedrahita|Miguel Lago|Edu Soto|El Gran Wyoming|Carlos Latre|Javier Coronas|Carolina Iglesias|Henar Álvarez|Lalachus|Grison|Anabel Alonso|Julián López|Ernesto Sevilla|Jorge Ponce|Ricardo Castella|Moncho Borrajo|Pepe Viyuela")},
+ {id:"tv",g:"espana",name:"Tele y corazón",emo:"💅",color:"#c9b6ff",words:L("Jorge Javier Vázquez|Pablo Motos|Jordi Hurtado|Ana Rosa Quintana|Susanna Griso|Matías Prats|Carlos Sobera|Christian Gálvez|Roberto Leal|Juanra Bonet|Risto Mejide|Mercedes Milá|Belén Esteban|Kiko Rivera|Anne Igartiburu|Ramón García|Jesús Vázquez|Boris Izaguirre|Iker Jiménez|Jesús Calleja|Alberto Chicote|Jordi Évole|Ana Pastor|Lara Álvarez|Cristina Pedroche|Pilar Rubio|Terelu Campos|María Teresa Campos|Kiko Matamoros|Carmen Lomana|Isabel Preysler|Tamara Falcó|Ana Obregón|Lydia Lozano|Rafa Mora|Georgina Rodríguez|Sandra Barneda|Frank Blanco|Karlos Arguiñano|Mario Vaquerizo|Pedro Piqueras|Vicente Vallés|Sara Carbonero|Emma García|Joaquín Prat|Toñi Moreno|María Patiño|Bigote Arrocet")},
+ {id:"influencers",g:"espana",name:"Youtubers y streamers",emo:"📱",color:"#7cf2c3",words:L("Ibai|El Rubius|AuronPlay|TheGrefg|Vegetta777|Willyrex|Mangel|Luzu|Lolito|Alexby11|Perxitaa|Xokas|Illojuan|Cristinini|Jordi Wild|DjMaRiiO|Dulceida|Paula Gonu|María Pombo|Lola Lolita|Laura Escanes|Marta Díaz|Violeta Mangriñán|Aroyitt|Biyín|Knekro|Plex|Nil Ojeda|Gerard Romero|Ángel Martín|Andrea Compton|Dalas Review|ElMillor|Rakky|Gemita|Tomás Páramo|La Velada del Año|Kings League|Spursito|MrBeast|PewDiePie|Kai Cenat|IShowSpeed|Spreen|Coscu|Juan Guarnizo|Rivers")},
+ {id:"futbol",g:"espana",name:"Futbolistas españoles",emo:"⚽",color:"#ffb84d",words:L("Iniesta|Xavi|Iker Casillas|Sergio Ramos|Puyol|Piqué|Fernando Torres|Raúl|David Villa|Busquets|Pedri|Gavi|Lamine Yamal|Nico Williams|Rodri|Morata|Dani Carvajal|Isco|Koke|Unai Simón|Jordi Alba|Xabi Alonso|Fernando Hierro|Butragueño|Luis Enrique|Pep Guardiola|Luis Aragonés|Vicente del Bosque|Di Stéfano|Joaquín|Jesús Navas|Cesc Fàbregas|David Silva|Juan Mata|Aitana Bonmatí|Alexia Putellas|Jenni Hermoso|Olga Carmona|Dani Olmo|Fermín López|Cucurella|Oyarzabal|Zubimendi|Pau Cubarsí|Ferran Torres|Marcos Llorente|Saúl Ñíguez|Ansu Fati|Paco Gento|Kubala|Míchel")},
+ {id:"deportes",g:"espana",name:"Deportistas españoles",emo:"🥇",color:"#8fd3ff",words:L("Rafa Nadal|Carlos Alcaraz|Fernando Alonso|Carlos Sainz|Marc Márquez|Pau Gasol|Marc Gasol|Ricky Rubio|Mireia Belmonte|Carolina Marín|Garbiñe Muguruza|Arantxa Sánchez Vicario|Miguel Induráin|Alberto Contador|Perico Delgado|Seve Ballesteros|Jon Rahm|Sergio García|Jorge Lorenzo|Dani Pedrosa|Ángel Nieto|Álex Márquez|Ona Carbonell|Gemma Mengual|Saúl Craviotto|Ilia Topuria|Ruth Beitia|Fermín Cacho|Sergi Llull|Rudy Fernández|Juan Carlos Navarro|Paula Badosa|David Ferrer|Ana Peleteiro|Laia Sanz|Kilian Jornet|Joan Mir|Pedro Acosta|Alejandro Valverde|Óscar Freire|Lydia Valentín|Teresa Perales|Javier Fernández|Nani Roma|Santi Aldama")},
+ {id:"historiaes",g:"espana",name:"Historia de España",emo:"👑",color:"#e8c39e",words:L("Cristóbal Colón|Isabel la Católica|Fernando el Católico|Felipe II|Carlos V|El Cid|Cervantes|Don Quijote|Sancho Panza|Lope de Vega|Velázquez|Goya|Picasso|Dalí|Miró|Gaudí|Hernán Cortés|Francisco Pizarro|Juana la Loca|Don Pelayo|Blas de Lezo|Agustina de Aragón|García Lorca|Antonio Machado|Unamuno|Ramón y Cajal|Severo Ochoa|Clara Campoamor|Rey Juan Carlos|Rey Felipe VI|Reina Letizia|Princesa Leonor|Adolfo Suárez|Isaac Peral|Juan Sebastián Elcano|Santa Teresa de Jesús|Viriato|Séneca|Trajano|Alfonso X el Sabio|Boabdil|Almanzor|Manolete|Rosalía de Castro|Bécquer|Sorolla|El Greco|Murillo|Lazarillo de Tormes|Don Juan Tenorio|Dulcinea")},
+ {id:"cine-tv-es",g:"espana",name:"Pelis, series y programas",emo:"🎞️",color:"#ff6b6b",words:L("Ocho apellidos vascos|Torrente|Campeones|El laberinto del fauno|Mar adentro|Los otros|El orfanato|REC|Lo imposible|Celda 211|Volver|Todo sobre mi madre|El día de la bestia|Padre no hay más que uno|Tadeo Jones|El hoyo|La sociedad de la nieve|Airbag|Bienvenido, Mister Marshall|Tres metros sobre el cielo|Fuga de cerebros|Aquí no hay quien viva|La que se avecina|Los Serrano|Médico de familia|Cuéntame cómo pasó|Física o Química|El Internado|Los hombres de Paco|Paquita Salas|Verano azul|Farmacia de guardia|Aída|7 vidas|Camera Café|Águila Roja|Operación Triunfo|Gran Hermano|Pasapalabra|Saber y ganar|MasterChef|Supervivientes|Sálvame|El Hormiguero|La Revuelta|Tu cara me suena|First Dates|La isla de las tentaciones|Cuarto Milenio|Un, dos, tres|El precio justo|Grand Prix|Humor amarillo|Crónicas marcianas|La ruleta de la suerte|Los Lunnis|Barrio Sésamo|Club Megatrix|Benidorm Fest|Las campanadas|El Chiringuito")},
+ {id:"canciones",g:"espana",name:"Canciones míticas",emo:"🎶",color:"#5ee0a0",words:L("Macarena|Aserejé|Despechá|Malamente|Corazón partío|Bulería|Mediterráneo|Y nos dieron las diez|Hijo de la luna|Cuéntame|Un rayo de sol|Paquito el chocolatero|Que viva España|Mujer contra mujer|Me colé en una fiesta|Lobo hombre en París|La flaca|Princesas|Insurrección|Zapatillas|Volando voy|Soy un truhán, soy un señor|Bailando|Mi gran noche|SloMo|Zorra|Quédate|Sarandonga|El chiringuito|Ni tú ni nadie|Bailar pegados|Devuélveme a mi chica|Chiquilla|Sevilla tiene un color especial|A quién le importa|Vivir así es morir de amor|Entre dos tierras|La puerta de Alcalá|Escándalo|Hoy no me puedo levantar|Despacito|La Bamba|Gasolina|Waka Waka|Thriller|Bohemian Rhapsody|We Will Rock You|Billie Jean|Dancing Queen|Imagine|Shake It Off|Bad Romance|Single Ladies|Shape of You|Gangnam Style|YMCA|Livin' la Vida Loca|My Heart Will Go On|Let It Go|Happy|Uptown Funk|Rolling in the Deep|Smells Like Teen Spirit|I Will Survive|Highway to Hell|Like a Prayer")},
+ {id:"espana-cosas",g:"espana",name:"Muy de España",emo:"🇪🇸",color:"#ffc078",words:L("La siesta|Las uvas de Nochevieja|San Fermín|La Tomatina|Las Fallas|Feria de Abril|Semana Santa|El Gordo de Navidad|Los Reyes Magos|Carnaval de Cádiz|Castells|El Rocío|Sagrada Familia|Alhambra|Puerta del Sol|Museo del Prado|Santiago Bernabéu|Camp Nou|Mezquita de Córdoba|La Giralda|Acueducto de Segovia|Guggenheim|El Teide|Camino de Santiago|Benidorm|Ibiza|Park Güell|Gran Vía|Cibeles|El Retiro|Paella|Tortilla de patatas|Churros con chocolate|Cocido madrileño|Calimocho|Tinto de verano|Bocadillo de calamares|Polvorones|Roscón de Reyes|El botijo|El abanico|El toro de Osborne|La bota de vino|El chupito|El vermut|La caña|El palillo|Las sevillanas|El cajón flamenco|El chotis|La jota|El mus|El dominó en el bar|El Lazarillo|La gaita")},
+ {id:"expresiones",g:"espana",name:"Expresiones",emo:"💬",color:"#ffd8a8",words:L("Estar como una cabra|Ponerse las botas|Tirar la casa por la ventana|Ser pan comido|Estar en las nubes|Dar calabazas|Ponerse como un tomate|Tomar el pelo|Estar hasta las narices|Meter la pata|Ser un pez gordo|Costar un ojo de la cara|Echar una mano|Estar sin blanca|Hablar por los codos|Ser uña y carne|No tener pelos en la lengua|Buscarle tres pies al gato|Más vale pájaro en mano|A buenas horas, mangas verdes|Ser la leche|Estar de mala leche|Quedarse frito|Ir al grano|Pillar el toro|Dormir como un tronco|Llover a cántaros|Hacer el ganso|Ser un cero a la izquierda|Estar como un fideo|Tener mala pata|Montar un pollo|Flipar en colores|Ir de punta en blanco|Echar balones fuera|Ser más feo que Picio|Cada mochuelo a su olivo|En casa del herrero, cuchillo de palo|Al pan, pan y al vino, vino|Mirar por encima del hombro")},
+ // ---------- GENERAL ----------
+ {id:"animales",g:"general",name:"Animales",emo:"🐘",color:"#9be15d",words:L("Perro|Gato|Elefante|Jirafa|León|Tigre|Mono|Gorila|Cebra|Hipopótamo|Rinoceronte|Cocodrilo|Tiburón|Delfín|Ballena|Pulpo|Medusa|Pingüino|Oso polar|Oso panda|Koala|Canguro|Camello|Caballo|Vaca|Cerdo|Oveja|Gallina|Pato|Búho|Águila|Loro|Flamenco|Pavo real|Serpiente|Tortuga|Rana|Camaleón|Murciélago|Ardilla|Conejo|Ratón|Hámster|Erizo|Mapache|Mofeta|Zorro|Lobo|Perezoso|Avestruz|Abeja|Mariposa|Araña|Hormiga|Mosquito|Caracol|Cangrejo|Langosta|Caballito de mar|Foca|Morsa|Dinosaurio|Tiranosaurio Rex|Unicornio|Dragón|Gusano|Cucaracha|Pez payaso|Burro|Cabra|Llama|Castor|Nutria|Hiena|Leopardo|Tucán|Cisne|Gallo|Pavo")},
+ {id:"objetos",g:"general",name:"Cosas de casa",emo:"🛋️",color:"#ffd6a5",words:L("Lavadora|Microondas|Nevera|Tostadora|Sofá|Cama|Almohada|Mando de la tele|Cargador del móvil|Paraguas|Tijeras|Cepillo de dientes|Secador de pelo|Plancha|Aspiradora|Escoba|Fregona|Espejo|Despertador|Lámpara|Bombilla|Cafetera|Sartén|Olla|Tenedor|Cuchara|Abrelatas|Sacacorchos|Grifo|Bañera|Ducha|Váter|Papel higiénico|Llaves|Cartera|Gafas de sol|Mochila|Maleta|Bolígrafo|Calculadora|Ordenador|Auriculares|Videoconsola|Ventilador|Radiador|Persiana|Percha|Pinza de la ropa|Calcetín|Zapatilla de estar por casa|Tirita|Termómetro|Vela|Mechero|Pila|Enchufe|Batidora|Rallador|Silla|Mesa|Alfombra|Cortina|Botijo|Escalera|Martillo|Destornillador|Cinta americana|Pegamento|Clip|Grapadora")},
+ {id:"profesiones",g:"general",name:"Profesiones",emo:"👩‍🚒",color:"#74c0fc",words:L("Médico|Bombero|Policía|Profesor|Astronauta|Cocinero|Camarero|Peluquero|Fontanero|Electricista|Piloto|Azafata|Dentista|Veterinario|Granjero|Pescador|Mecánico|Cartero|Taxista|Abogado|Juez|Periodista|Fotógrafo|Payaso|Mago|Bailarín|Futbolista|Árbitro|Socorrista|Jardinero|Panadero|Carnicero|Albañil|Arquitecto|Científico|Programador|Youtuber|DJ|Detective|Espía|Pirata|Soldado|Enfermero|Farmacéutico|Cajero de súper|Repartidor|Barrendero|Torero|Pintor|Escultor|Influencer|Monja|Cura|Rey|Domador de leones|Buzo|Leñador|Cantante de ópera|Presentador del tiempo|Guardia de seguridad|Basurero|Chófer|Profesor de autoescuela")},
+ {id:"lugares",g:"general",name:"Países y lugares",emo:"🌍",color:"#66d9e8",words:L("Francia|Italia|Alemania|Reino Unido|Estados Unidos|México|Brasil|Argentina|Japón|China|India|Egipto|Australia|Canadá|Rusia|Grecia|Portugal|Marruecos|Turquía|Noruega|Suiza|Países Bajos|Corea del Sur|Tailandia|Cuba|Jamaica|Islandia|Nueva Zelanda|Sudáfrica|Kenia|París|Londres|Nueva York|Roma|Tokio|Las Vegas|Los Ángeles|Venecia|Dubái|Río de Janeiro|Ámsterdam|Berlín|Moscú|Hawái|Torre Eiffel|Estatua de la Libertad|Coliseo|Big Ben|Pirámides de Egipto|Gran Muralla China|Machu Picchu|Taj Mahal|Torre de Pisa|Cataratas del Niágara|Monte Everest|Polo Norte|Desierto del Sáhara|Amazonas|Disneyland|Hollywood|La Luna|Marte|Atlántida|El Triángulo de las Bermudas|Madrid|Barcelona|Sevilla|Ibiza|Canarias")},
+ {id:"deportestipos",g:"general",name:"Deportes",emo:"🏓",color:"#a9e34b",words:L("Fútbol|Baloncesto|Tenis|Pádel|Natación|Golf|Boxeo|Rugby|Béisbol|Fútbol americano|Voleibol|Balonmano|Ciclismo|Atletismo|Gimnasia rítmica|Esquí|Snowboard|Surf|Skate|Patinaje sobre hielo|Hockey|Kárate|Judo|Esgrima|Tiro con arco|Waterpolo|Ping-pong|Bádminton|Escalada|Paracaidismo|Puenting|Ajedrez|Bolos|Billar|Dardos|Petanca|Fórmula 1|MotoGP|Hípica|Halterofilia|Crossfit|Yoga|Zumba|Maratón|Triatlón|Lucha libre|Sumo|Curling|Parkour|Salto de longitud|Lanzamiento de jabalina|Natación sincronizada|Kitesurf|Piragüismo|Taekwondo")},
+ {id:"vida",g:"general",name:"Cosas de la vida",emo:"🎉",color:"#e599f7",words:L("Selfie|Wifi|Atasco|Resaca|Cumpleaños|Boda|Los lunes|Vacaciones|Despertador|Spoiler|Meme|Emoji|Contraseña olvidada|Batería al 1 %|Hipo|Estornudo|Bostezo|Cosquillas|Pesadilla|Déjà vu|Arcoíris|Tormenta|Terremoto|Eclipse|Fuegos artificiales|Montaña rusa|Noria|Karaoke|Fiesta de pijamas|Primera cita|Examen sorpresa|Black Friday|Halloween|Navidad|San Valentín|Nochevieja|Tatuaje|Dieta|Gimnasio|Barbacoa|Pícnic|Acampada|Crucero|Avión|Submarino|Cohete|Ovni|Zombi|Fantasma|Vampiro|Robot|Inteligencia artificial|Teletrabajo|Videollamada|Grupo de WhatsApp|Audio de 5 minutos|Mensaje en visto|Ex|Suegra|Atracón|Rebajas|Despedida de soltero|Mudanza|Lunes por la mañana|Día de lluvia|Insomnio")},
+ {id:"mimica",g:"general",name:"Mímica",emo:"🕺",color:"#63e6be",words:L("Conducir|Nadar|Bailar sevillanas|Hacer la croqueta|Tocar la guitarra|Planchar|Pescar|Montar a caballo|Cocinar|Torear|Echarse la siesta|Hacer surf|Bailar reguetón|Comerse las uvas|Hacerse un selfie|Lavarse los dientes|Jugar al pádel|Saltar a la comba|Ir en patinete|Tocar la batería|Cantar en un karaoke|Hacer yoga|Boxear|Ordeñar una vaca|Hacer la cama|Esquiar|Jugar a la Play|Hacer un TikTok|Tirar un penalti|Correr un maratón|Pedir un taxi|Hacer palmas|Bailar la Macarena|Montar en bici|Escalar|Hacer flexiones|Cambiar un pañal|Tender la ropa|Pasear al perro|Afeitarse|Maquillarse|Ir en metro en hora punta|Ligar en una discoteca|Hacer la ola|Cortar jamón|Abrir una botella de cava|Ser un zombi|Ser una gallina|Ser un mono|Tocar el piano|Disparar con arco|Montar en montaña rusa|Pisar una pieza de Lego|Cruzar un río saltando piedras|Hacer malabares")},
+ {id:"infancia",g:"general",name:"Dibujos e infancia",emo:"🧸",color:"#ffc9de",words:L("Mortadelo y Filemón|Zipi y Zape|Superlópez|D'Artacán|David el Gnomo|La vuelta al mundo de Willy Fog|Los Fruittis|Espinete|Pocoyó|Heidi|Oliver y Benji|Bola de Dragón|Pokémon|Doraemon|Shin Chan|Los Simpson|Los Pitufos|La abeja Maya|Mazinger Z|Chicho Terremoto|Los Fraggle|Teletubbies|Peppa Pig|Dora la Exploradora|Bob Esponja|Las Supernenas|Digimon|Tamagotchi|Tazos|Cromos|Game Boy|Chuches|Pin y Pon|Nenuco|Barriguitas|Scalextric|Furby|Tom y Jerry|El Coyote y el Correcaminos|Snoopy|Naranjito|Cobi|Curro|Bluey|Paw Patrol|Hora de aventuras|Gumball|Phineas y Ferb|Los Picapiedra|Pippi Calzaslargas|Los Power Rangers|Sailor Moon|Yo-yo|Peonza|Comba|Escondite|Pilla-pilla")},
+];
+
+const GROUPS=[
+ {id:"mezclas",name:"🎲 Mezclas"},
+ {id:"mundo",name:"🌍 Mundo"},
+ {id:"espana",name:"🇪🇸 España"},
+ {id:"general",name:"✨ General"},
+ {id:"mias",name:"✏️ Tus categorías"},
+];
+// limpiar duplicados dentro de cada categoría
+CATS.forEach(c=>c.words=[...new Set(c.words.map(w=>w.trim()).filter(Boolean))]);
+const uniq=a=>[...new Set(a)];
+const MIXES=[
+ {id:"mix-famosos",g:"mezclas",name:"Famosos de todo",emo:"⭐",color:"#fff3bf",words:uniq(CATS.filter(c=>["leyendas","pop","hollywood","deportistas","historia","cantantes","actores","humor","tv","influencers","futbol","deportes"].includes(c.id)).flatMap(c=>c.words))},
+ {id:"mix-mundo",g:"mezclas",name:"Famosos del mundo",emo:"🌎",color:"#d0ebff",words:uniq(CATS.filter(c=>["leyendas","pop","hollywood","deportistas","historia","ficcion"].includes(c.id)).flatMap(c=>c.words))},
+ {id:"mix-espana",g:"mezclas",name:"Famosos de España",emo:"🇪🇸",color:"#ffe3e3",words:uniq(CATS.filter(c=>["cantantes","actores","humor","tv","influencers","futbol","deportes","historiaes"].includes(c.id)).flatMap(c=>c.words))},
+ {id:"mix-facil",g:"mezclas",name:"Fácil (familia y peques)",emo:"🐣",color:"#d3f9d8",words:uniq(CATS.filter(c=>["animales","objetos","profesiones","ficcion","infancia","deportestipos"].includes(c.id)).flatMap(c=>c.words))},
+ {id:"mix-total",g:"mezclas",name:"¡Mezcla total!",emo:"🎲",color:"#ffffff",words:uniq(CATS.flatMap(c=>c.words))},
+];
+
+const TEAM_EMOJIS=L("🦁|🐯|🐻|🐼|🦊|🐺|🐸|🐵|🦄|🐲|🦖|🐙|🦈|🐬|🦅|🦉|🐝|🦋|🐧|🐔|🦆|🐷|🐮|🐴|🦓|🦒|🐘|🦔|🦥|🦦|🐢|🐍|👽|🤖|👻|💀|🤡|🎃|😈|🥷|🧙|🧛|🧜|🦸|🦹|👑|💎|🔥|⚡|🌈|⭐|🌙|☀️|❄️|🌪️|🍕|🍔|🌮|🍩|🍉|🍓|🥑|🌶️|🍺|🍷|⚽|🏀|🎾|🏆|🎸|🎧|🎮|🎲|🚀|🛸|🏎️|💣|🧨|💪|🧠|👀|💋|🦷|🍆|🥔|🧀|🪩")
+  .filter(e=>!["🍆"].includes(e));
+const TEAM_COLORS=["#ffd23f","#ff6b6b","#4dabf7","#69db7c","#c084fc","#ff922b","#f783ac","#3bc9db","#ffffff","#a9e34b"];
+const DEFAULT_TEAMS=[
+ {name:"Los Cracks",emo:"🦁",color:"#ffd23f"},{name:"Las Leyendas",emo:"🦄",color:"#f783ac"},
+ {name:"Los Pringaos",emo:"🐸",color:"#69db7c"},{name:"Team Rocket",emo:"🚀",color:"#4dabf7"},
+ {name:"Los Fieras",emo:"🔥",color:"#ff922b"},{name:"Los Fantasmas",emo:"👻",color:"#c084fc"},
+ {name:"Los Galácticos",emo:"⭐",color:"#3bc9db"},{name:"Los Patatas",emo:"🥔",color:"#a9e34b"},
+];
+
+/* =====================================================
+   ESTADO Y PERSISTENCIA
+   ===================================================== */
+const $=id=>document.getElementById(id);
+const store={get(k,d){try{const v=localStorage.getItem("alf_"+k);return v?JSON.parse(v):d;}catch(e){return d;}},
+             set(k,v){try{localStorage.setItem("alf_"+k,JSON.stringify(v));}catch(e){}}};
+const S=Object.assign({time:60,sens:"media",invert:false,music:true,sound:true,vibe:true,noRepeat:true,filter:"todas"},store.get("settings",{}));
+const saveS=()=>store.set("settings",S);
+let M=store.get("match",null); // {mode:'solo'|'teams', teams:[{name,emo,color,score,rounds}], turn, roundsPer}
+if(!M||!Array.isArray(M.teams)) M={mode:"solo",teams:DEFAULT_TEAMS.slice(0,2).map(t=>({...t,score:0,rounds:0})),turn:0,roundsPer:3};
+const saveM=()=>store.set("match",M);
+let customs=store.get("customs",[]);
+let used=store.get("used",{});
+const allCats=()=>[...MIXES,...CATS,...customs.map(c=>({...c,g:"mias"}))];
+const catById=id=>allCats().find(c=>c.id===id);
+
+let cat=null, deck=[], idx=0, results=[];
+let state="idle"; // idle | countdown | playing | feedback | paused
+let endAt=0, remaining=0, tickT=null, cdT=null, lastAction=0, neutral=true;
+
+/* =====================================================
+   NAVEGACIÓN (botón atrás del móvil + botones ←)
+   ===================================================== */
+const SCREENS=["home","teams","settings","rules","custom","ready","results","final"];
+let stack=["home"], ignoreHash=false;
+function showScreen(id){document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id));window.scrollTo(0,0);const el=$(id);if(el)el.scrollTop=0;}
+function nav(name){stack.push(name);ignoreHash=true;location.hash=name;render(name);}
+function navReplace(name){stack[stack.length-1]=name;try{history.replaceState(null,"","#"+name);}catch(e){}render(name);}
+function back(){if(stack.length>1)history.back();else render("home");}
+function goHome(){const n=stack.length-1;if(n>0)history.go(-n);else render("home");}
+window.addEventListener("hashchange",()=>{
+  if(ignoreHash){ignoreHash=false;return;}
+  const name=location.hash.slice(1)||"home";
+  const cur=stack[stack.length-1];
+  if(cur==="play"&&name!=="play"&&inRound()){ // atrás durante la ronda → pausa
+    pauseRound();ignoreHash=true;location.hash="play";return;
+  }
+  const i=stack.lastIndexOf(name);
+  if(i>=0)stack.length=i+1;else stack.push(name);
+  render(name);
+});
+function render(name){
+  if(name==="play"){if(!inRound())navReplace("ready");return;}
+  if(inRound())abortRound();
+  if(!SCREENS.includes(name))name="home";
+  ({home:renderHome,teams:renderTeams,settings:renderSettings,ready:renderReady,custom:renderCustom})[name]?.();
+  showScreen(name);
+  if(name!=="final")stopConfetti();
+}
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-back],[data-home],[data-go]");if(!b)return;
+  if(b.hasAttribute("data-back"))back();
+  else if(b.hasAttribute("data-home"))goHome();
+  else nav(b.dataset.go);
+});
+try{if(location.hash)history.replaceState(null,"",location.href.split("#")[0]);}catch(e){}
+
+/* =====================================================
+   HOME
+   ===================================================== */
+function curTeam(){return M.mode==="teams"?M.teams[M.turn%M.teams.length]:null;}
+function renderHome(){
+  // barra de equipos
+  const tb=$("teambar");
+  if(M.mode==="teams"){
+    tb.innerHTML=`<span class="lbl">🏆 Turno:</span>`+M.teams.map((t,i)=>`<span class="tchip ${i===M.turn%M.teams.length?"cur":""}"><span class="e">${t.emo}</span>${esc(t.name)} · ${t.score}</span>`).join("")+`<button class="icon-btn" data-go="teams" style="margin-left:auto;flex-shrink:0">✎</button>`;
+  }else{
+    tb.innerHTML=`<span class="lbl">🎯 Partida libre</span><button class="icon-btn" data-go="teams" style="margin-left:auto">👥 Jugar por equipos</button>`;
+  }
+  // filtros
+  const F=[{id:"todas",name:"Todas"},...GROUPS.filter(g=>g.id!=="mias"||customs.length)];
+  $("filters").innerHTML=F.map(f=>`<button class="chip ${S.filter===f.id?"on":""}" data-f="${f.id}">${f.name}</button>`).join("");
+  $("filters").querySelectorAll(".chip").forEach(b=>b.onclick=()=>{S.filter=b.dataset.f;saveS();renderHome();});
+  // secciones
+  const sec=$("sections");sec.innerHTML="";
+  GROUPS.forEach(g=>{
+    if(S.filter!=="todas"&&S.filter!==g.id)return;
+    const list=allCats().filter(c=>c.g===g.id);
+    if(g.id!=="mias"&&!list.length)return;
+    const h=document.createElement("div");h.className="sec-title";h.textContent=g.name;sec.appendChild(h);
+    const grid=document.createElement("div");grid.className="grid";
+    list.forEach(c=>{
+      const b=document.createElement("button");b.className="cat";b.style.background=c.color||"#ffe066";
+      b.innerHTML=`<span class="emo">${c.emo}</span><span><div class="name">${esc(c.name)}</div><div class="count">${c.words.length} tarjetas</div></span>`;
+      b.onclick=()=>{cat=c;nav("ready");};grid.appendChild(b);
+    });
+    if(g.id==="mias"||(S.filter==="todas"&&g.id==="general"&&!customs.length)){
+      if(g.id==="general"){ /* añadimos una sección propia para crear */ }
+    }
+    if(g.id==="mias"){
+      const n=document.createElement("button");n.className="cat new";n.innerHTML=`<span class="emo">➕</span><span class="name" style="font-size:15px">Crear categoría</span>`;
+      n.onclick=()=>{editing=null;nav("custom");};grid.appendChild(n);
+    }
+    sec.appendChild(grid);
+  });
+}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* =====================================================
+   EQUIPOS
+   ===================================================== */
+function renderTeams(){
+  $("modeSeg").querySelectorAll("button").forEach(b=>{b.classList.toggle("on",b.dataset.m===M.mode);
+    b.onclick=()=>{M.mode=b.dataset.m;saveM();renderTeams();};});
+  $("modeHelp").textContent=M.mode==="teams"?"Los turnos rotan solos entre equipos y se lleva el marcador.":"Cada ronda va por libre, sin marcador.";
+  $("teamsBlock").style.display=M.mode==="teams"?"block":"none";
+  $("nTeamsSeg").innerHTML=[2,3,4,5,6,7,8].map(n=>`<button data-n="${n}" class="${M.teams.length===n?"on":""}">${n}</button>`).join("");
+  $("nTeamsSeg").querySelectorAll("button").forEach(b=>b.onclick=()=>setTeamCount(+b.dataset.n));
+  $("roundsSeg").innerHTML=[1,2,3,4,5,0].map(n=>`<button data-r="${n}" class="${M.roundsPer===n?"on":""}">${n||"∞"}</button>`).join("");
+  $("roundsSeg").querySelectorAll("button").forEach(b=>b.onclick=()=>{M.roundsPer=+b.dataset.r;saveM();renderTeams();});
+  const tl=$("teamList");tl.innerHTML="";
+  M.teams.forEach((t,i)=>{
+    const row=document.createElement("div");row.className="team-row";
+    row.innerHTML=`<button class="emo-btn" style="background:${t.color}">${t.emo}</button><input maxlength="22" value="${esc(t.name)}" placeholder="Nombre del equipo">`+(M.teams.length>2?`<button class="del" aria-label="Quitar">✕</button>`:"");
+    row.querySelector(".emo-btn").onclick=()=>openEmoPicker(i);
+    row.querySelector("input").oninput=e=>{t.name=e.target.value||`Equipo ${i+1}`;saveM();renderBoard();};
+    const d=row.querySelector(".del");if(d)d.onclick=()=>{M.teams.splice(i,1);M.turn=M.turn%M.teams.length;saveM();renderTeams();};
+    tl.appendChild(row);
+  });
+  renderBoard();
+}
+function renderBoard(){
+  $("teamBoard").innerHTML=boardHTML();
+}
+function boardHTML(highlight=true){
+  const sorted=M.teams.map((t,i)=>({...t,i})).sort((a,b)=>b.score-a.score);
+  return sorted.map(t=>`<div class="board-row ${highlight&&t.i===M.turn%M.teams.length?"cur":""}"><span class="e">${t.emo}</span><span class="n">${esc(t.name)}<small style="display:block;color:var(--muted);font-weight:600;font-size:12px">${t.rounds} ${t.rounds===1?"ronda":"rondas"}${M.roundsPer?" de "+M.roundsPer:""}</small></span><span class="pts">${t.score}</span></div>`).join("");
+}
+function setTeamCount(n){
+  while(M.teams.length<n){const used=M.teams.map(t=>t.emo);const d=DEFAULT_TEAMS.find(t=>!used.includes(t.emo))||DEFAULT_TEAMS[M.teams.length%8];
+    M.teams.push({...d,score:0,rounds:0});}
+  M.teams.length=n;M.turn=M.turn%n;saveM();renderTeams();
+}
+$("resetScores").onclick=()=>{M.teams.forEach(t=>{t.score=0;t.rounds=0;});M.turn=0;saveM();renderTeams();toast("Marcador a cero");};
+
+let emoTarget=null; // {type:'team',i} | {type:'custom'}
+function openEmoPicker(i){
+  emoTarget={type:"team",i};const t=M.teams[i];
+  $("emoTitle").textContent="Emoji y color de "+t.name;
+  $("colorRow").style.display="flex";
+  $("colorRow").innerHTML=TEAM_COLORS.map(c=>`<button style="background:${c}" class="${c===t.color?"on":""}" data-c="${c}"></button>`).join("");
+  $("colorRow").querySelectorAll("button").forEach(b=>b.onclick=()=>{t.color=b.dataset.c;saveM();openEmoPicker(i);renderTeams();});
+  fillEmoGrid(t.emo,e=>{t.emo=e;saveM();renderTeams();openEmoPicker(i);});
+  $("emoModal").classList.add("active");
+}
+function fillEmoGrid(cur,onPick,list=TEAM_EMOJIS){
+  $("emoGrid").innerHTML=list.map(e=>`<button class="${e===cur?"on":""}">${e}</button>`).join("");
+  $("emoGrid").querySelectorAll("button").forEach(b=>b.onclick=()=>onPick(b.textContent));
+}
+$("emoDone").onclick=()=>$("emoModal").classList.remove("active");
+$("emoModal").onclick=e=>{if(e.target.id==="emoModal")$("emoModal").classList.remove("active");};
+
+/* =====================================================
+   AJUSTES
+   ===================================================== */
+function renderSettings(){
+  $("timeSeg").innerHTML=[30,45,60,90,120].map(t=>`<button data-t="${t}" class="${S.time===t?"on":""}">${t<120?t+" s":"2 min"}</button>`).join("");
+  $("timeSeg").querySelectorAll("button").forEach(b=>b.onclick=()=>{S.time=+b.dataset.t;saveS();renderSettings();});
+  $("sensSeg").innerHTML=[["baja","Baja"],["media","Media"],["alta","Alta"]].map(([k,n])=>`<button data-s="${k}" class="${S.sens===k?"on":""}">${n}</button>`).join("");
+  $("sensSeg").querySelectorAll("button").forEach(b=>b.onclick=()=>{S.sens=b.dataset.s;saveS();renderSettings();});
+  [["swInvert","invert"],["swMusic","music"],["swSound","sound"],["swVibe","vibe"],["swNoRepeat","noRepeat"]].forEach(([id,k])=>{
+    const el=$(id);el.classList.toggle("on",!!S[k]);
+    el.onclick=()=>{S[k]=!S[k];saveS();renderSettings();if(k==="music"){S.music?Music.play("menu"):Music.stop();}};
+  });
+}
+$("resetUsed").onclick=()=>{used={};store.set("used",used);toast("Todas las tarjetas disponibles de nuevo");};
+
+/* =====================================================
+   CATEGORÍAS PROPIAS
+   ===================================================== */
+let editing=null, customEmo="✏️";
+const CUSTOM_EMOS=L("✏️|🏢|🏫|🍻|🎉|👨‍👩‍👧|💼|🏖️|🎓|❤️|😂|🔥|⭐|🎵|🎬|⚽|🍔|🐶|🌍|🤪|🤫|👀|💩|🦄");
+function renderCustom(){
+  const c=editing?customs.find(x=>x.id===editing):null;
+  $("customTitle").textContent=c?"Editar categoría":"Crear categoría";
+  $("customName").value=c?c.name:"";
+  $("customWords").value=c?c.words.join("\n"):"";
+  customEmo=c?c.emo:"✏️";$("customEmo").textContent=customEmo;
+  $("customDelete").style.display=c?"block":"none";
+  countCustom();
+}
+function customList(){return uniq($("customWords").value.split("\n").map(s=>s.trim()).filter(Boolean));}
+function countCustom(){const n=customList().length;$("customCount").textContent=`${n} ${n===1?"palabra":"palabras"} · mínimo 5`;}
+$("customWords").oninput=countCustom;
+$("customEmo").onclick=()=>{
+  emoTarget={type:"custom"};$("emoTitle").textContent="Emoji de la categoría";$("colorRow").style.display="none";
+  fillEmoGrid(customEmo,e=>{customEmo=e;$("customEmo").textContent=e;$("emoModal").classList.remove("active");},CUSTOM_EMOS.concat(TEAM_EMOJIS));
+  $("emoModal").classList.add("active");
+};
+$("customSave").onclick=()=>{
+  const name=$("customName").value.trim(),words=customList();
+  if(!name){toast("Ponle un nombre");return;}
+  if(words.length<5){toast("Añade al menos 5 palabras");return;}
+  const colors=["#ffd8a8","#d0bfff","#a5d8ff","#b2f2bb","#ffc9c9","#fff3bf"];
+  if(editing){const c=customs.find(x=>x.id===editing);Object.assign(c,{name,words,emo:customEmo});}
+  else customs.push({id:"c"+Date.now(),name,words,emo:customEmo,color:colors[customs.length%colors.length]});
+  store.set("customs",customs);toast("Categoría guardada");
+  if(editing){cat=catById(editing);} back();
+};
+$("customDelete").onclick=()=>{
+  customs=customs.filter(x=>x.id!==editing);store.set("customs",customs);toast("Categoría eliminada");goHome();
+};
+
+/* =====================================================
+   READY + SENSOR
+   ===================================================== */
+const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+const needsPerm=typeof DeviceMotionEvent!=="undefined"&&typeof DeviceMotionEvent.requestPermission==="function";
+let motionOn=false, gotMotion=false, zf=0, sensorT=null;
+function listenMotion(){if(motionOn)return;window.addEventListener("devicemotion",onMotion);motionOn=true;}
+if(!needsPerm&&"DeviceMotionEvent" in window)listenMotion();
+async function askMotion(){
+  if(!needsPerm){listenMotion();return;}
+  try{const r=await DeviceMotionEvent.requestPermission();if(r==="granted")listenMotion();}catch(e){}
+}
+function renderReady(){
+  if(!cat){navReplace("home");return;}
+  cat=catById(cat.id)||cat;
+  const t=curTeam(),rt=$("readyTurn");
+  if(t){rt.style.display="flex";rt.style.background=t.color;rt.innerHTML=`<span class="e">${t.emo}</span>Turno de ${esc(t.name)}`;}
+  else rt.style.display="none";
+  $("readyCat").innerHTML=`<span class="e">${cat.emo}</span>${esc(cat.name)}`;
+  $("readyMeta").innerHTML=`<span>⏱️ ${S.time} s</span><span>🃏 ${cat.words.length} tarjetas</span>${M.mode==="teams"&&M.roundsPer?`<span>🔁 Ronda ${Math.min((t.rounds||0)+1,M.roundsPer)} de ${M.roundsPer}</span>`:""}`;
+  $("editCustom").style.display=cat.g==="mias"?"flex":"none";
+  updateSensor();clearInterval(sensorT);sensorT=setInterval(updateSensor,700);
+}
+$("editCustom").onclick=()=>{editing=cat.id;nav("custom");};
+function updateSensor(){
+  const el=$("sensorStatus");
+  if(gotMotion){el.className="sensor ok";el.textContent="✅ Sensor de movimiento listo";}
+  else if(needsPerm&&!motionOn){el.className="sensor";el.textContent="📱 Te pediremos permiso de movimiento al empezar";}
+  else{el.className="sensor warn";el.textContent="👆 Sin sensor: toca derecha (acierto) o izquierda (paso)";}
+}
+const SENS={baja:[8.3,4],media:[7,3.5],alta:[5.6,3]};
+function onMotion(e){
+  const a=e.accelerationIncludingGravity;if(!a||a.z==null)return;
+  gotMotion=true;
+  const z=a.z*(isIOS?-1:1); // z>0 → pantalla mirando al techo
+  zf=zf*0.6+z*0.4;
+  if(state!=="playing")return;
+  const [hi,lo]=SENS[S.sens]||SENS.media;
+  if(Math.abs(zf)<lo){neutral=true;return;}
+  if(!neutral||Date.now()-lastAction<650)return;
+  if(zf>hi){neutral=false;answer(S.invert?"pass":"ok");}
+  else if(zf<-hi){neutral=false;answer(S.invert?"ok":"pass");}
+}
+
+/* =====================================================
+   SONIDO, MÚSICA, VIBRACIÓN
+   ===================================================== */
+let actx=null;
+function ac(){actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==="suspended")actx.resume();return actx;}
+function beep(f,d=0.15,type="sine",v=0.25){if(!S.sound)return;try{const c=ac(),o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.value=f;
+  g.gain.setValueAtTime(v,c.currentTime);g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+d);o.connect(g).connect(c.destination);o.start();o.stop(c.currentTime+d);}catch(e){}}
+const sOk=()=>{beep(660,.12,"triangle",.3);setTimeout(()=>beep(990,.2,"triangle",.3),100);};
+const sPass=()=>beep(196,.25,"square",.12);
+const sTick=()=>beep(880,.06,"sine",.15);
+const sGo=()=>beep(1320,.25,"triangle",.3);
+const sEnd=()=>{beep(523,.2);setTimeout(()=>beep(392,.2),180);setTimeout(()=>beep(262,.45),360);};
+const sWin=()=>{[523,659,784,1047].forEach((f,i)=>setTimeout(()=>beep(f,.25,"triangle",.3),i*140));};
+const vib=p=>{if(!S.vibe)return;try{navigator.vibrate&&navigator.vibrate(p);}catch(e){}};
+
+const Music={
+  mode:null,timer:null,step:0,next:0,bpm:120,out:null,noise:null,
+  init(){const c=ac();if(!this.out){this.out=c.createGain();this.out.gain.value=0.45;this.out.connect(c.destination);
+    const b=c.createBuffer(1,c.sampleRate*0.2,c.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;this.noise=b;}return c;},
+  play(mode){if(!S.music){this.stop();return;}
+    try{const c=this.init();if(this.mode===mode)return;this.mode=mode;this.bpm=mode==="menu"?100:mode==="win"?120:132;this.step=0;this.next=c.currentTime+0.06;
+      clearInterval(this.timer);this.timer=setInterval(()=>this.sched(),25);}catch(e){}},
+  stop(){clearInterval(this.timer);this.timer=null;this.mode=null;},
+  fast(on){if(this.mode==="game")this.bpm=on?166:132;},
+  note(f,t,d,type,v){const o=actx.createOscillator(),g=actx.createGain();o.type=type;o.frequency.value=f;
+    g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(v,t+0.01);g.gain.exponentialRampToValueAtTime(0.0001,t+d);o.connect(g).connect(this.out);o.start(t);o.stop(t+d+0.02);},
+  kick(t){const o=actx.createOscillator(),g=actx.createGain();o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(40,t+0.12);
+    g.gain.setValueAtTime(0.55,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.15);o.connect(g).connect(this.out);o.start(t);o.stop(t+0.16);},
+  hat(t,v=0.07){const s=actx.createBufferSource(),f=actx.createBiquadFilter(),g=actx.createGain();s.buffer=this.noise;f.type="highpass";f.frequency.value=7000;
+    g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.05);s.connect(f).connect(g).connect(this.out);s.start(t);s.stop(t+0.06);},
+  snare(t){const s=actx.createBufferSource(),f=actx.createBiquadFilter(),g=actx.createGain();s.buffer=this.noise;f.type="bandpass";f.frequency.value=1800;
+    g.gain.setValueAtTime(0.18,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.12);s.connect(f).connect(g).connect(this.out);s.start(t);s.stop(t+0.13);},
+  sched(){
+    const mf=m=>440*Math.pow(2,(m-69)/12);
+    const prog={menu:[[60,64,67],[57,60,64],[53,57,60],[55,59,62]],game:[[57,60,64],[53,57,60],[60,64,67],[55,59,62]],win:[[60,64,67],[65,69,72],[67,71,74],[60,64,67]]}[this.mode];
+    const mel=[0,1,2,1,2,1,0,2,0,2,1,2,0,1,2,1];
+    while(this.next<actx.currentTime+0.12){
+      const t=this.next,s=this.step,ch=prog[Math.floor(s/16)%4],sx=s%16,e8=60/this.bpm/2,phrase=Math.floor(s/64)%2;
+      if(this.mode==="game"){
+        if(sx%4===0)this.kick(t);
+        if(sx%8===4)this.snare(t);
+        if(sx%2===1)this.hat(t);
+        if(sx%4===0||sx%4===3)this.note(mf(ch[0]-24),t,e8*0.9,"triangle",0.35);
+        const m=phrase?mel[(sx+4)%16]:mel[sx];
+        this.note(mf(ch[m]+12+(phrase&&sx%8===6?12:0)),t,e8*0.6,"square",0.055);
+        if(sx===0||sx===8)this.note(mf(ch[2]+12),t,e8*3,"sawtooth",0.022);
+      }else if(this.mode==="win"){
+        if(sx%4===0)this.kick(t);if(sx%2===1)this.hat(t,.05);
+        this.note(mf(ch[sx%3]+12),t,e8*0.8,"triangle",0.1);
+        if(sx%4===0)this.note(mf(ch[0]-12),t,e8*3,"triangle",0.25);
+      }else{
+        if(sx%4===0)this.note(mf(ch[0]-12),t,e8*3.5,"triangle",0.22);
+        if(sx%2===0)this.note(mf(ch[mel[sx]]+12),t,e8*1.6,"triangle",0.075);
+        if(sx%8===4)this.hat(t,0.03);
+      }
+      this.next+=e8;this.step++;
+    }
+  }
+};
+document.addEventListener("pointerdown",function f(){document.removeEventListener("pointerdown",f);if(state==="idle")Music.play("menu");},{once:true});
+document.addEventListener("visibilitychange",()=>{if(document.hidden){Music.stop();if(state==="playing")pauseRound();}else if(!inRound())Music.play("menu");});
+
+/* =====================================================
+   PARTIDA
+   ===================================================== */
+const inRound=()=>["countdown","playing","feedback","paused"].includes(state);
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;};
+let wakeLock=null;
+async function keepAwake(on){try{if(on&&navigator.wakeLock)wakeLock=await navigator.wakeLock.request("screen");else if(wakeLock){wakeLock.release();wakeLock=null;}}catch(e){}}
+function buildDeck(){
+  let pool=cat.words;
+  if(S.noRepeat){const u=new Set(used[cat.id]||[]);pool=cat.words.filter(w=>!u.has(w));
+    if(pool.length<15){used[cat.id]=[];pool=cat.words;}}
+  return shuffle(pool);
+}
+$("startBtn").onclick=async()=>{
+  clearInterval(sensorT);
+  try{ac();}catch(e){}
+  await askMotion();
+  try{const el=document.documentElement;if(el.requestFullscreen)await el.requestFullscreen();else if(el.webkitRequestFullscreen)el.webkitRequestFullscreen();}catch(e){}
+  try{await screen.orientation.lock("landscape");}catch(e){}
+  keepAwake(true);
+  startCountdown();
+  nav("play");
+};
+function startCountdown(){
+  deck=buildDeck();idx=0;results=[];state="countdown";
+  Music.play("game");
+  showScreen("countdown");
+  let n=3;const num=$("cdNum");num.textContent="📱";
+  clearTimeout(cdT);
+  const step=()=>{
+    if(state!=="countdown")return;
+    if(n>0){num.textContent=n;num.style.animation="none";void num.offsetWidth;num.style.animation="";sTick();n--;cdT=setTimeout(step,1000);}
+    else{sGo();startGame();}
+  };
+  cdT=setTimeout(step,1300);
+}
+function startGame(){
+  state="playing";neutral=true;lastAction=Date.now();
+  const t=curTeam();
+  $("gTeam").textContent=t?`${t.emo} ${t.name}`:"";$("gTeam").style.display=t?"":"none";
+  $("gCat").textContent=cat.emo+" "+cat.name;
+  $("gScore").textContent="0";
+  $("taplabels").style.display=gotMotion?"none":"flex";
+  $("fb").className="";
+  showWord();showScreen("game");
+  endAt=Date.now()+S.time*1000;startTick();
+}
+function startTick(){
+  clearInterval(tickT);let lastSec=-1;
+  tickT=setInterval(()=>{
+    if(state!=="playing"&&state!=="feedback")return;
+    const left=Math.max(0,Math.ceil((endAt-Date.now())/1000));
+    if(left!==lastSec){lastSec=left;const el=$("timer");el.textContent=left;el.classList.toggle("low",left<=10);
+      Music.fast(left<=10);if(left<=5&&left>0)sTick();}
+    if(left<=0)endRound();
+  },100);
+}
+function showWord(){
+  if(idx>=deck.length)deck=deck.concat(shuffle(cat.words));
+  const w=deck[idx],el=$("word");el.textContent=w;
+  el.style.fontSize=w.length>30?"clamp(26px,8vmin,78px)":w.length>18?"clamp(30px,10vmin,100px)":"";
+}
+function answer(kind){
+  if(state!=="playing")return;
+  lastAction=Date.now();
+  results.push({w:deck[idx],ok:kind==="ok"});idx++;
+  $("gScore").textContent=results.filter(r=>r.ok).length;
+  state="feedback";
+  const fb=$("fb");fb.className=kind;fb.textContent=kind==="ok"?"¡CORRECTO!":"PASO";
+  if(kind==="ok"){sOk();vib(70);}else{sPass();vib([40,40,40]);}
+  setTimeout(()=>{if(state!=="feedback")return;fb.className="";state="playing";showWord();},750);
+}
+$("tapRight").onclick=()=>answer(S.invert?"pass":"ok");
+$("tapLeft").onclick=()=>answer(S.invert?"ok":"pass");
+document.addEventListener("keydown",e=>{
+  if(state==="playing"){if(e.key==="ArrowUp"||e.key==="ArrowRight")answer("ok");if(e.key==="ArrowDown"||e.key==="ArrowLeft")answer("pass");}
+  if(e.key==="Escape"&&inRound())pauseRound();
+});
+// pausa
+function pauseRound(){
+  if(!inRound()||state==="paused")return;
+  if(state==="countdown"){clearTimeout(cdT);state="paused";remaining=S.time*1000;pausedFromCd=true;}
+  else{remaining=Math.max(0,endAt-Date.now());state="paused";pausedFromCd=false;$("fb").className="";}
+  clearInterval(tickT);Music.stop();
+  $("pauseModal").classList.add("active");
+}
+let pausedFromCd=false;
+$("pauseBtn").onclick=e=>{e.stopPropagation();pauseRound();};
+$("resumeBtn").onclick=()=>{
+  $("pauseModal").classList.remove("active");
+  if(pausedFromCd){startCountdown();return;}
+  state="playing";neutral=false;lastAction=Date.now();endAt=Date.now()+remaining;Music.play("game");showWord();startTick();
+};
+$("restartBtn").onclick=()=>{$("pauseModal").classList.remove("active");startCountdown();};
+$("quitBtn").onclick=()=>{$("pauseModal").classList.remove("active");abortRound();back();};
+document.addEventListener("fullscreenchange",()=>{if(!document.fullscreenElement&&state==="playing")pauseRound();});
+function abortRound(){
+  clearInterval(tickT);clearTimeout(cdT);state="idle";$("pauseModal").classList.remove("active");
+  exitFS();keepAwake(false);Music.play("menu");
+}
+function exitFS(){try{screen.orientation.unlock&&screen.orientation.unlock();}catch(e){}
+  try{if(document.fullscreenElement)document.exitFullscreen();else if(document.webkitFullscreenElement)document.webkitExitFullscreen();}catch(e){}}
+let roundTeamIdx=null;
+function endRound(){
+  clearInterval(tickT);
+  if(state==="playing"&&deck[idx])results.push({w:deck[idx],ok:false});
+  state="idle";Music.stop();sEnd();vib([200,100,200]);
+  const fb=$("fb");fb.className="time";fb.textContent="¡TIEMPO!";
+  // marcar como usadas
+  if(S.noRepeat){used[cat.id]=uniq([...(used[cat.id]||[]),...results.map(r=>r.w)]);store.set("used",used);}
+  // puntuar
+  roundTeamIdx=null;
+  if(M.mode==="teams"){roundTeamIdx=M.turn%M.teams.length;const t=M.teams[roundTeamIdx];t.score+=results.filter(r=>r.ok).length;t.rounds++;saveM();}
+  setTimeout(()=>{exitFS();keepAwake(false);fb.className="";navReplace("results");showResults();Music.play("menu");},1500);
+}
+
+/* =====================================================
+   RESULTADOS Y PODIO
+   ===================================================== */
+function showResults(){
+  const ok=results.filter(r=>r.ok).length;
+  $("resTotal").textContent=ok;
+  $("resSub").textContent=`${ok===1?"acierto":"aciertos"} de ${results.length} · ${cat.name}`;
+  const rt=$("resTeam");
+  if(roundTeamIdx!=null){const t=M.teams[roundTeamIdx];rt.style.display="inline-flex";rt.style.background=t.color;rt.innerHTML=`<span style="font-size:22px">${t.emo}</span>${esc(t.name)}`;}
+  else rt.style.display="none";
+  const list=$("resList");
+  list.innerHTML=results.map((r,i)=>`<button class="${r.ok?"r-ok":"r-pass"}" data-i="${i}"><span>${esc(r.w)}</span><span>${r.ok?"✓":"✗"}</span></button>`).join("");
+  list.querySelectorAll("button").forEach(b=>b.onclick=()=>{
+    const r=results[+b.dataset.i];r.ok=!r.ok;
+    if(roundTeamIdx!=null){M.teams[roundTeamIdx].score+=r.ok?1:-1;saveM();}
+    showResults();
+  });
+  // marcador y siguiente
+  const nb=$("nextBtn");
+  if(M.mode==="teams"){
+    $("resBoard").innerHTML=`<div class="sec-title">🏆 Marcador</div>`+boardHTML(false);
+    const done=M.roundsPer&&M.teams.every(t=>t.rounds>=M.roundsPer);
+    const nextI=(roundTeamIdx+1)%M.teams.length,nt=M.teams[nextI];
+    if(done){nb.textContent="🏆 Ver ganador";nb.onclick=()=>{navReplace("final");showFinal();};}
+    else{nb.innerHTML=`Siguiente: ${nt.emo} ${esc(nt.name)}`;nb.onclick=()=>{M.turn=nextI;saveM();back();};}
+  }else{
+    $("resBoard").innerHTML="";nb.textContent="Otra vez";nb.onclick=()=>back();
+  }
+  $("changeCatBtn").onclick=()=>{if(M.mode==="teams"&&roundTeamIdx!=null){M.turn=(roundTeamIdx+1)%M.teams.length;saveM();}goHome();};
+}
+function showFinal(){
+  const sorted=M.teams.slice().sort((a,b)=>b.score-a.score);
+  const top=sorted[0],tie=sorted.length>1&&sorted[1].score===top.score;
+  $("winEmo").textContent=tie?"🤝":top.emo;
+  $("winTitle").textContent=tie?"¡Empate!":`¡Gana ${top.name}!`;
+  $("winSub").textContent=tie?"Haced una ronda de desempate a 30 segundos":`con ${top.score} puntos`;
+  const order=[sorted[1],sorted[0],sorted[2]].filter(Boolean),h={0:150,1:110,2:80};
+  $("podium").innerHTML=order.map(t=>{const pos=sorted.filter(x=>x.score>t.score).length;return `<div class="pod"><span class="e">${t.emo}</span><span class="n">${esc(t.name)}</span><div class="blk" style="height:${h[pos]}px;background:${t.color}">${pos+1}º</div></div>`;}).join("");
+  $("finalBoard").innerHTML=boardHTML(false);
+  $("newMatch").onclick=()=>{M.teams.forEach(t=>{t.score=0;t.rounds=0;});M.turn=0;saveM();goHome();};
+  sWin();Music.stop();setTimeout(()=>Music.play("win"),700);confetti();
+}
+
+/* confeti */
+let confT=null;
+function confetti(){
+  const cv=$("confetti"),c=cv.getContext("2d");cv.width=innerWidth;cv.height=innerHeight;
+  const cols=["#ffd23f","#ff4f8b","#19c37d","#4dabf7","#c084fc","#ff922b"];
+  const P=Array.from({length:160},()=>({x:Math.random()*cv.width,y:-20-Math.random()*cv.height,r:4+Math.random()*6,c:cols[Math.random()*6|0],vy:2+Math.random()*3,vx:-1+Math.random()*2,a:Math.random()*6,va:-.1+Math.random()*.2}));
+  let frames=0;cancelAnimationFrame(confT);
+  (function loop(){c.clearRect(0,0,cv.width,cv.height);P.forEach(p=>{p.y+=p.vy;p.x+=p.vx;p.a+=p.va;c.save();c.translate(p.x,p.y);c.rotate(p.a);c.fillStyle=p.c;c.fillRect(-p.r/2,-p.r/4,p.r,p.r/2);c.restore();if(p.y>cv.height&&frames<240){p.y=-10;p.x=Math.random()*cv.width;}});
+    frames++;if(frames<420)confT=requestAnimationFrame(loop);else c.clearRect(0,0,cv.width,cv.height);})();
+}
+function stopConfetti(){cancelAnimationFrame(confT);const cv=$("confetti");cv.getContext("2d").clearRect(0,0,cv.width,cv.height);}
+
+/* toast */
+let toastT=null;
+function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),1800);}
+
+renderHome();
+</script>
+</body>
+</html>
