@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1b1035">
+<title>¡A la Frente! — Adivina el famoso</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#1b1035; --card:#2a1a52; --ink:#fff7ec; --muted:#bcaee0;
+  --ok:#19c37d; --pass:#ff8a1f; --accent:#ffd23f; --pink:#ff4f8b;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--ink);font-family:'Bricolage Grotesque',system-ui,sans-serif;overflow:hidden;user-select:none;-webkit-user-select:none}
+.screen{position:fixed;inset:0;display:none;flex-direction:column;
+  padding:calc(env(safe-area-inset-top) + 16px) calc(env(safe-area-inset-right) + 16px) calc(env(safe-area-inset-bottom) + 16px) calc(env(safe-area-inset-left) + 16px)}
+.screen.active{display:flex}
+
+/* HOME */
+#home{overflow-y:auto}
+header{text-align:center;margin:8px 0 18px}
+header h1{font-size:clamp(34px,9vw,56px);font-weight:800;letter-spacing:-1.5px;line-height:1}
+header h1 span{color:var(--accent)}
+header p{color:var(--muted);margin-top:6px;font-size:15px}
+.settings{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:16px}
+.pill{background:var(--card);border:2px solid transparent;color:var(--ink);border-radius:999px;padding:8px 14px;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.pill.on{border-color:var(--accent);color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;padding-bottom:24px}
+.cat{border:none;border-radius:20px;padding:16px 14px;min-height:110px;text-align:left;color:#1b1035;font:inherit;cursor:pointer;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 6px 0 rgba(0,0,0,.25);transition:transform .1s}
+.cat:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.25)}
+.cat .emo{font-size:34px;line-height:1}
+.cat .name{font-weight:800;font-size:18px;line-height:1.1}
+.cat .count{font-size:12px;font-weight:700;opacity:.65}
+.howto{background:var(--card);border-radius:18px;padding:14px 16px;font-size:14px;color:var(--muted);line-height:1.5;margin-bottom:16px}
+.howto b{color:var(--ink)}
+.sensor-note{font-size:13px;margin-top:6px}
+
+/* READY */
+#ready,#countdown,#game,#feedback{align-items:center;justify-content:center;text-align:center}
+#ready h2{font-size:clamp(28px,7vw,52px);font-weight:800;line-height:1.05}
+#ready .catname{color:var(--accent)}
+#ready p{color:var(--muted);margin:14px 0 24px;font-size:17px;max-width:520px}
+.big-btn{background:var(--accent);color:#1b1035;border:none;border-radius:999px;padding:18px 44px;font:inherit;font-size:22px;font-weight:800;cursor:pointer;box-shadow:0 6px 0 #b8920f}
+.big-btn:active{transform:translateY(4px);box-shadow:0 2px 0 #b8920f}
+.link-btn{background:none;border:none;color:var(--muted);font:inherit;font-size:15px;margin-top:18px;cursor:pointer;text-decoration:underline}
+.phone-anim{font-size:64px;margin-bottom:10px;animation:bob 1.6s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-10px) rotate(-8deg)}}
+
+/* COUNTDOWN */
+#countdown .num{font-size:min(50vh,40vw);font-weight:800;line-height:1;color:var(--accent)}
+#countdown .hint{color:var(--muted);font-size:20px}
+
+/* GAME */
+#game{background:var(--pink)}
+#game .timer{position:absolute;top:calc(env(safe-area-inset-top) + 12px);left:50%;transform:translateX(-50%);font-size:clamp(22px,6vh,40px);font-weight:800;background:rgba(0,0,0,.2);padding:4px 18px;border-radius:999px}
+#game .timer.low{background:#fff;color:var(--pink);animation:pulse .5s infinite alternate}
+@keyframes pulse{to{transform:translateX(-50%) scale(1.1)}}
+#game .score{position:absolute;top:calc(env(safe-area-inset-top) + 12px);right:calc(env(safe-area-inset-right) + 18px);font-size:clamp(18px,5vh,30px);font-weight:800}
+#word{font-size:clamp(36px,13vmin,120px);font-weight:800;line-height:1.02;letter-spacing:-1px;padding:0 4vw;max-width:100%;word-wrap:break-word;text-shadow:0 4px 0 rgba(0,0,0,.18)}
+#game .cat-tag{position:absolute;top:calc(env(safe-area-inset-top) + 18px);left:calc(env(safe-area-inset-left) + 18px);font-size:clamp(13px,3.5vh,18px);font-weight:700;opacity:.8}
+.tapzones{position:absolute;inset:0;display:flex}
+.tapzones div{flex:1}
+.taplabels{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 10px);left:0;right:0;display:flex;justify-content:space-between;padding:0 20px;font-size:13px;font-weight:700;opacity:.75;pointer-events:none}
+.quit{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 10px);left:50%;transform:translateX(-50%);background:rgba(0,0,0,.2);border:none;color:#fff;border-radius:999px;padding:6px 14px;font:inherit;font-size:13px;font-weight:700;z-index:5;cursor:pointer}
+
+/* FEEDBACK */
+#feedback .fb{font-size:clamp(48px,18vmin,150px);font-weight:800;letter-spacing:-2px}
+#feedback.ok{background:var(--ok)}
+#feedback.pass{background:var(--pass)}
+#feedback.time{background:#3b2a73}
+
+/* RESULTS */
+#results{overflow-y:auto;align-items:center}
+#results h2{font-size:clamp(26px,6vw,40px);font-weight:800;margin-top:10px}
+#results .total{font-size:clamp(80px,22vw,140px);font-weight:800;color:var(--accent);line-height:1}
+#results .sub{color:var(--muted);margin-bottom:16px}
+.reslist{width:100%;max-width:520px;display:flex;flex-direction:column;gap:6px;margin-bottom:22px}
+.reslist div{padding:10px 14px;border-radius:12px;font-weight:700;font-size:17px;display:flex;justify-content:space-between}
+.reslist .r-ok{background:rgba(25,195,125,.2);color:#7ff0bd}
+.reslist .r-pass{background:rgba(255,138,31,.15);color:#ffbf85;text-decoration:line-through;text-decoration-thickness:1px}
+.row-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;padding-bottom:20px}
+.ghost-btn{background:var(--card);color:var(--ink);border:none;border-radius:999px;padding:16px 28px;font:inherit;font-size:18px;font-weight:800;cursor:pointer}
+
+#rotate{display:none}
+#rules{overflow-y:auto;align-items:center}
+.rules-title{font-size:clamp(26px,6vw,40px);font-weight:800;margin:8px 0 14px;text-align:center}
+.rules-list{max-width:600px;padding-left:26px;display:flex;flex-direction:column;gap:12px;font-size:17px;line-height:1.4;color:var(--muted);margin-bottom:22px}
+.rules-list b{color:var(--ink)}
+.rules-list li::marker{color:var(--accent);font-weight:800}
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<section id="home" class="screen active">
+  <header>
+    <h1>¡A la <span>Frente!</span></h1>
+    <p>Adivina famosos y cosas de España</p>
+  </header>
+  <div class="howto">
+    <b>Cómo se juega:</b> elige una categoría, ponte el móvil en la frente en horizontal y que tus amigos te den pistas.<br>
+    📱⬆️ <b>Inclina hacia arriba</b> (mirando al techo) = <b style="color:var(--ok)">¡Acierto!</b><br>
+    📱⬇️ <b>Inclina hacia abajo</b> (mirando al suelo) = <b style="color:var(--pass)">Paso</b>
+    <div class="sensor-note" id="sensorNote"></div>
+  </div>
+  <div class="settings" id="timeSel">
+    <button class="pill" data-t="30">30 s</button>
+    <button class="pill on" data-t="60">60 s</button>
+    <button class="pill" data-t="90">90 s</button>
+    <button class="pill" data-t="120">2 min</button>
+  </div>
+  <div class="settings">
+    <button class="pill" id="invertBtn">🔄 Invertir gestos</button>
+    <button class="pill on" id="soundBtn">🔊 Efectos</button>
+    <button class="pill on" id="musicBtn">🎵 Música</button>
+    <button class="pill" id="rulesBtn">📜 Normas</button>
+  </div>
+  <div class="grid" id="grid"></div>
+</section>
+
+<!-- RULES -->
+<section id="rules" class="screen">
+  <h2 class="rules-title">📜 Normas del juego</h2>
+  <ol class="rules-list">
+    <li><b>Equipos:</b> jugad por turnos, individual o en equipos. Le toca a uno ponerse el móvil en la frente.</li>
+    <li><b>El móvil va en la frente</b>, en horizontal, con la pantalla mirando a los demás. ¡El que lo lleva no puede mirar!</li>
+    <li><b>Los demás dan pistas</b> para que adivine lo que sale en pantalla.</li>
+    <li><b>Prohibido decir la palabra</b> ni partes de ella (si sale «Ocho apellidos vascos» no vale decir «vascos»). Tampoco vale deletrear ni traducir.</li>
+    <li>En la categoría <b>Mímica</b> solo se puede actuar: ¡nada de hablar!</li>
+    <li><b>Inclina hacia arriba</b> (mirando al techo) si aciertas → <b style="color:var(--ok)">+1 punto</b>.</li>
+    <li><b>Inclina hacia abajo</b> (mirando al suelo) para pasar. Pasar no resta, pero pierdes tiempo.</li>
+    <li>Si el sensor no responde: <b>toca la derecha</b> para acierto y <b>la izquierda</b> para pasar.</li>
+    <li>Cuando se acaba el tiempo, se cuentan los aciertos y pasa el móvil al siguiente.</li>
+    <li><b>Gana</b> quien más aciertos sume tras las rondas que acordéis (por ejemplo, 3 rondas cada uno).</li>
+  </ol>
+  <div style="text-align:center;padding-bottom:20px"><button class="big-btn" id="rulesOk">¡Entendido!</button></div>
+</section>
+
+<!-- READY -->
+<section id="ready" class="screen">
+  <div class="phone-anim">📱</div>
+  <h2>Categoría:<br><span class="catname" id="readyCat"></span></h2>
+  <p id="readyText">Pulsa empezar y ponte el móvil en la frente, en horizontal, con la pantalla mirando a tus amigos.</p>
+  <button class="big-btn" id="startBtn">¡Empezar!</button>
+  <button class="link-btn" id="backBtn">← Cambiar categoría</button>
+</section>
+
+<!-- COUNTDOWN -->
+<section id="countdown" class="screen">
+  <div class="num" id="cdNum">3</div>
+  <div class="hint" id="cdHint">¡Colócalo en la frente!</div>
+</section>
+
+<!-- GAME -->
+<section id="game" class="screen">
+  <div class="cat-tag" id="gameCat"></div>
+  <div class="timer" id="timer">60</div>
+  <div class="score" id="score">0</div>
+  <div id="word"></div>
+  <div class="tapzones" id="tapzones"><div id="tapPass"></div><div id="tapOk"></div></div>
+  <div class="taplabels" id="taplabels"><span>◀ Toca: PASO</span><span>Toca: ACIERTO ▶</span></div>
+  <button class="quit" id="quitBtn">✕ Salir</button>
+</section>
+
+<!-- FEEDBACK -->
+<section id="feedback" class="screen"><div class="fb" id="fbText"></div></section>
+
+<!-- RESULTS -->
+<section id="results" class="screen">
+  <h2>¡Tiempo!</h2>
+  <div class="total" id="resTotal">0</div>
+  <div class="sub" id="resSub"></div>
+  <div class="reslist" id="resList"></div>
+  <div class="row-btns">
+    <button class="big-btn" id="againBtn">Otra vez</button>
+    <button class="ghost-btn" id="homeBtn">Categorías</button>
+  </div>
+</section>
+
+<script>
+const CATS = [
+ {id:"cantantes",name:"Cantantes españoles",emo:"🎤",color:"#ffd23f",words:["Rosalía","Nusar3000","Alejandro Sanz","David Bisbal","Pablo Alborán","Aitana","Quevedo","C. Tangana","Lola Flores","Rocío Jurado","Raphael","Julio Iglesias","Enrique Iglesias","Camilo Sesto","Isabel Pantoja","Malú","Vanesa Martín","Melendi","Estopa","Manuel Carrasco","David Bustamante","Chenoa","Edurne","Lola Índigo","Ana Mena","Rozalén","Joaquín Sabina","Joan Manuel Serrat","Miguel Bosé","Marta Sánchez","Mónica Naranjo","Rosana","Antonio Orozco","Dani Martín","Amaral","La Oreja de Van Gogh","Mecano","El Canto del Loco","Fito Cabrales","Leiva","Omar Montes","Camela","Los del Río","Niña Pastori","Rosario Flores","Chanel","Blanca Paloma","Ana Guerra","Sergio Dalma","Abraham Mateo","Camarón de la Isla","Paco de Lucía","Alaska","Rels B","Bad Gyal","Bunbury","Melody","Mala Rodríguez","Bertín Osborne","Marea","Extremoduro","Hombres G","Nena Daconte","Pastora Soler","Antonio Molina","Manolo Escobar","Raya Real","Morad","Saiko","Ana Torroja"]},
+ {id:"actores",name:"Actores y actrices",emo:"🎬",color:"#ff8fb1",words:["Antonio Banderas","Penélope Cruz","Javier Bardem","Úrsula Corberó","Álvaro Morte","Mario Casas","Blanca Suárez","Paco León","Dani Rovira","Santiago Segura","José Coronado","Luis Tosar","Belén Rueda","Maribel Verdú","Elsa Pataky","Paz Vega","Carmen Maura","Imanol Arias","Antonio Resines","Karra Elejalde","Clara Lago","Miguel Herrán","Jaime Lorente","Ester Expósito","Najwa Nimri","Itziar Ituño","Pedro Alonso","Leonor Watling","Óscar Jaenada","Hugo Silva","Paula Echevarría","Michelle Jenner","Quim Gutiérrez","Ana de Armas","Eduardo Noriega","Fernando Tejero","Belén Cuesta","Javier Cámara","Concha Velasco","Alfredo Landa","Paco Martínez Soria","Lina Morgan","Gracita Morales","Rossy de Palma","Antonio de la Torre","Inma Cuesta","Aitana Sánchez-Gijón","Adriana Ugarte","Carmen Machi","Emilio Gutiérrez Caba","Verónica Echegui","Arón Piper","Nathalia Valerie","Macarena García","Raúl Arévalo","Antonio Garrido","Pepe Viyuela","Mariano Peña","Jordi Sánchez","Pablo Chiapella"]},
+ {id:"humor",name:"Humoristas",emo:"😂",color:"#a0e7ff",words:["Chiquito de la Calzada","Martes y Trece","Cruz y Raya","José Mota","Leo Harlem","Dani Martínez","David Broncano","Berto Romero","Ignatius Farray","Faemino y Cansado","Gila","Eugenio","Paz Padilla","Los Morancos","Florentino Fernández","Joaquín Reyes","Raúl Cimas","Goyo Jiménez","Dani Mateo","Quequé","Andreu Buenafuente","Silvia Abril","Arturo Valls","Santiago Segura","Dani Rovira","Paco León","Las Hermanas Gilda","Carolina Noriega? no","Luis Piedrahita","Jaime Caravaca","Miguel Lago","Edu Soto","Wyoming","Carlos Latre","Joaquín Prat (padre)","Javier Coronas","Ricardo Castella","Carolina Iglesias","Henar Álvarez","Lalachus","Grison","Anabel Alonso","Julián López","Ernesto Sevilla","Ponce (Jorge Ponce)","Manolo Royo","Pepe Viyuela","Moncho Borrajo"]},
+ {id:"tv",name:"TV y corazón",emo:"📺",color:"#c9b6ff",words:["Jorge Javier Vázquez","Pablo Motos","Jordi Hurtado","Ana Rosa Quintana","Susanna Griso","Matías Prats","Carlos Sobera","Christian Gálvez","Roberto Leal","Juanra Bonet","Risto Mejide","Mercedes Milá","Belén Esteban","Kiko Rivera","Anne Igartiburu","Ramón García","Jesús Vázquez","Boris Izaguirre","Iker Jiménez","Jesús Calleja","Alberto Chicote","Jordi Évole","Ana Pastor","Lara Álvarez","Cristina Pedroche","Pilar Rubio","Terelu Campos","María Teresa Campos","Kiko Matamoros","Carmen Lomana","Isabel Preysler","Tamara Falcó","Ana Obregón","Lydia Lozano","Rafa Mora","Georgina Rodríguez","Rocío Carrasco","Sandra Barneda","Frank Blanco","Jorge Fernández","Karlos Arguiñano","Mario Vaquerizo","Pedro Piqueras","Vicente Vallés","Sara Carbonero","Raquel Sánchez Silva","Emma García","Joaquín Prat","Toñi Moreno","Ana Belén? no","María Patiño","Bigote Arrocet","Paquirri"]},
+ {id:"influencers",name:"Youtubers e influencers",emo:"📱",color:"#7cf2c3",words:["Ibai","El Rubius","AuronPlay","TheGrefg","Vegetta777","Willyrex","Mangel","Luzu","Lolito","Alexby11","Perxitaa","Xokas","Illojuan","Cristinini","Jordi Wild","DjMaRiiO","Dulceida","Paula Gonu","María Pombo","Lola Lolita","Laura Escanes","Marta Díaz","Violeta Mangriñán","Aroyitt","Biyín","Knekro","Plex","Nil Ojeda","Gerard Romero","Ángel Martín","Andrea Compton","Sara Escudero","Vicens","Rivers? no","Juan Alberto","Dalas Review","Mister Jagger","ElMillor","Rakky","Gemita","Rush (Rush Smith)","Masi","Tomás Páramo","La Velada del Año","Kings League","Piqué (Kings League)","Spursito"]},
+ {id:"futbol",name:"Futbolistas",emo:"⚽",color:"#ffb84d",words:["Iniesta","Xavi","Iker Casillas","Sergio Ramos","Puyol","Piqué","Fernando Torres","Raúl","David Villa","Busquets","Pedri","Gavi","Lamine Yamal","Nico Williams","Rodri","Morata","Dani Carvajal","Isco","Koke","Unai Simón","Jordi Alba","Xabi Alonso","Fernando Hierro","Butragueño","Luis Enrique","Pep Guardiola","Luis Aragonés","Vicente del Bosque","Di Stéfano","Joaquín","Jesús Navas","Cesc Fàbregas","David Silva","Juan Mata","Aitana Bonmatí","Alexia Putellas","Jenni Hermoso","Olga Carmona","Dani Olmo","Fermín López","Cucurella","Oyarzabal","Zubimendi","Pau Cubarsí","Ferran Torres","Marcos Llorente","Saúl Ñíguez","Diego Simeone","Ansu Fati","Paco Gento","Kubala","Míchel","Salinas","Valerón","Cholo Simeone"]},
+ {id:"deportes",name:"Otros deportistas",emo:"🏆",color:"#8fd3ff",words:["Rafa Nadal","Carlos Alcaraz","Fernando Alonso","Carlos Sainz","Marc Márquez","Pau Gasol","Marc Gasol","Ricky Rubio","Mireia Belmonte","Carolina Marín","Garbiñe Muguruza","Arantxa Sánchez Vicario","Miguel Induráin","Alberto Contador","Pedro Delgado","Seve Ballesteros","Jon Rahm","Sergio García","Jorge Lorenzo","Dani Pedrosa","Ángel Nieto","Álex Márquez","Ona Carbonell","Gemma Mengual","Saúl Craviotto","Ilia Topuria","Ruth Beitia","Fermín Cacho","Sergi Llull","Rudy Fernández","Juan Carlos Navarro","Paula Badosa","David Ferrer","Ana Peleteiro","Laia Sanz","Kilian Jornet","Joan Mir","Pedro Acosta","Alejandro Valverde","Óscar Freire","Javier Gómez Noya","Lydia Valentín","Joel González","Mo Katir","Santi Aldama","Juancho Hernangómez","Teresa Perales","Javier Fernández (patinaje)","Carlos Sainz padre","Nani Roma"]},
+ {id:"historia",name:"Personajes históricos",emo:"👑",color:"#e8c39e",words:["Cristóbal Colón","Isabel la Católica","Fernando el Católico","Felipe II","Carlos V","El Cid","Cervantes","Don Quijote","Lope de Vega","Velázquez","Goya","Picasso","Dalí","Miró","Gaudí","Hernán Cortés","Francisco Pizarro","Juana la Loca","Don Pelayo","Blas de Lezo","Agustina de Aragón","García Lorca","Antonio Machado","Unamuno","Ramón y Cajal","Severo Ochoa","Clara Campoamor","Rey Juan Carlos","Rey Felipe VI","Reina Letizia","Princesa Leonor","Adolfo Suárez","Isaac Peral","Juan Sebastián Elcano","Santa Teresa de Jesús","Viriato","Séneca","Trajano","Alfonso X el Sabio","Boabdil","Almanzor","Manolete","Rosalía de Castro","Bécquer","Zorrilla","Sorolla","El Greco","Murillo","Concepción Arenal","Juan de la Cierva","Sancho Panza","Lazarillo de Tormes","Don Juan Tenorio","Dulcinea"]},
+ {id:"pelis",name:"Películas españolas",emo:"🍿",color:"#ff6b6b",words:["Ocho apellidos vascos","Torrente","Campeones","El laberinto del fauno","Mar adentro","Los otros","Abre los ojos","El orfanato","REC","Lo imposible","Celda 211","Todo sobre mi madre","Volver","Mujeres al borde de un ataque de nervios","Tesis","El día de la bestia","Perfectos desconocidos","Padre no hay más que uno","Tadeo Jones","Mortadelo y Filemón","El hoyo","La sociedad de la nieve","As bestas","Airbag","Muertos de risa","Bienvenido, Mister Marshall","El verdugo","Atraco a las tres","Los lunes al sol","El buen patrón","Mientras dure la guerra","Contratiempo","Toc Toc","Tres metros sobre el cielo","Tengo ganas de ti","Fuga de cerebros","Dolor y gloria","Pagafantas","Ocho apellidos catalanes","Señor, dame paciencia","Superlópez","Mamá o papá","Ahora o nunca","La gran familia española","El Bar","Smoking Room","Los Bingueros","Que se mueran los feos","Mortadelo y Filemón: La gran aventura","20.000 especies de abejas","Handia","Alcarràs","El niño"]},
+ {id:"series",name:"Series españolas",emo:"🎞️",color:"#b388ff",words:["La casa de papel","Élite","Aquí no hay quien viva","La que se avecina","Los Serrano","Médico de familia","Cuéntame cómo pasó","Física o Química","El Internado","Los hombres de Paco","Velvet","El Ministerio del Tiempo","Vis a vis","Paquita Salas","Merlí","Verano azul","Farmacia de guardia","Aída","7 vidas","Camera Café","Compañeros","Al salir de clase","Hospital Central","Águila Roja","Gran Hotel","Las chicas del cable","Machos alfa","Berlín","Toy Boy","Antidisturbios","Patria","Los protegidos","Escenas de matrimonio","El príncipe","Isabel","Allí abajo","Amar es para siempre","Arde Madrid","Mira lo que has hecho","Veneno","Los Simuladores (versión española)","Doctor Mateo","El comisario","Periodistas","Un paso adelante","Los misterios de Laura","Gran Reserva","Fariña","Hierro","La Caza","El Barco","Luna, el misterio de Calenda","Sin tetas no hay paraíso","Yo soy Bea","Matadero"]},
+ {id:"programas",name:"Programas de TV",emo:"🎙️",color:"#ffe066",words:["Operación Triunfo","Gran Hermano","Pasapalabra","Saber y ganar","MasterChef","Supervivientes","Sálvame","El Hormiguero","La Revuelta","Got Talent","La Voz","Tu cara me suena","First Dates","La isla de las tentaciones","Mujeres y hombres y viceversa","Pesadilla en la cocina","Cuarto Milenio","Callejeros","Un, dos, tres","El precio justo","Grand Prix","Humor amarillo","Crónicas marcianas","Caiga quien caiga","La ruleta de la suerte","Ahora caigo","¿Quién quiere ser millonario?","Telediario","Cachitos","Españoles en el mundo","El Intermedio","Late Motiv","Fama ¡a bailar!","Los Lunnis","Barrio Sésamo","Club Megatrix","Art Attack","Benidorm Fest","Eurovisión","Las campanadas","El Chiringuito","Deportes Cuatro","Gran Hermano VIP","Bake Off","Mask Singer","Masterchef Junior","El Grand Prix del verano","¡Boom!","El Desafío","Cifras y letras","Furor","Lluvia de estrellas"]},
+ {id:"canciones",name:"Canciones españolas",emo:"🎶",color:"#5ee0a0",words:["Macarena","Aserejé","Despechá","Malamente","Corazón partío","Bulería","Mediterráneo","Y nos dieron las diez","Hijo de la luna","Cuéntame","Un rayo de sol","Paquito el chocolatero","Que viva España","Mujer contra mujer","Me colé en una fiesta","Lobo hombre en París","La flaca","Princesas","Insurrección","Zapatillas","Volando voy","Como Camarón","Soy un truhán, soy un señor","Bailando","Mi gran noche","SloMo","Zorra","Columbia","Quédate","Sarandonga","El chiringuito","Ni tú ni nadie","Bailar pegados","Devuélveme a mi chica","Chiquilla","Sevilla tiene un color especial","A quién le importa","Vivir así es morir de amor","Entre dos tierras","Tacones rojos","Ave María","La puerta de Alcalá","Escándalo","Saturno","Cuando zarpa el barco","El taxi","Eaea","Pa' la cama voy? no","Agapimú","Hoy no me puedo levantar","Torero","Qué bonito","Para que no te vayas nunca","Te debería odiar? no","Lo malo","Nochentera","Tu calorro","La Bikina? no"]},
+ {id:"comida",name:"Comida española",emo:"🥘",color:"#ffa94d",words:["Paella","Tortilla de patatas","Gazpacho","Salmorejo","Jamón ibérico","Churros con chocolate","Pulpo a la gallega","Cocido madrileño","Fabada asturiana","Croquetas","Patatas bravas","Bocadillo de calamares","Pimientos de Padrón","Pan con tomate","Crema catalana","Torrijas","Turrón","Polvorones","Ensaladilla rusa","Gambas al ajillo","Fideuá","Migas","Callos","Rabo de toro","Cochinillo","Sangría","Horchata","Pisto","Empanada gallega","Queso manchego","Chorizo","Morcilla","Ensaimada","Sobrasada","Roscón de Reyes","Leche frita","Flan","Arroz con leche","Tarta de Santiago","Espetos","Tinto de verano","Calimocho","Txistorra","Pimientos del piquillo","Boquerones en vinagre","Escalivada","Calçots","Papas arrugadas","Huevos rotos","Lacón con grelos","Pestiños","Mantecados","Gofio","Bocata de jamón","Caracoles"]},
+ {id:"lugares",name:"Lugares y fiestas",emo:"🏛️",color:"#74c0fc",words:["Sagrada Familia","Alhambra","Puerta del Sol","Plaza Mayor","Museo del Prado","Santiago Bernabéu","Camp Nou","Mezquita de Córdoba","La Giralda","Acueducto de Segovia","Guggenheim","Ciudad de las Artes y las Ciencias","El Teide","Picos de Europa","Camino de Santiago","Ibiza","Benidorm","Toledo","Salamanca","Park Güell","Las Ramblas","Gran Vía","Cibeles","Puerta de Alcalá","El Retiro","Torre de Hércules","Playa de la Concha","Montserrat","Sierra Nevada","Doñana","Lanzarote","Mallorca","Casas Colgadas de Cuenca","El Escorial","Palacio Real","Plaza de España de Sevilla","Caminito del Rey","Las Fallas","San Fermín","La Tomatina","Feria de Abril","Semana Santa","Las Uvas de Nochevieja","Carnaval de Cádiz","Carnaval de Tenerife","Moros y Cristianos","Los Reyes Magos","La Mercè","San Isidro","El Rocío","Castells","Hogueras de San Juan","El Gordo de Navidad","Oktoberfest? no"]},
+ {id:"marcas",name:"Marcas españolas",emo:"🛍️",color:"#f783ac",words:["Zara","Mercadona","El Corte Inglés","Mango","Seat","Chupa Chups","Desigual","Movistar","Iberia","Repsol","Pull&Bear","Bershka","Stradivarius","Massimo Dutti","Cola Cao","Nocilla","Mahou","Estrella Galicia","Cruzcampo","Estrella Damm","Don Simón","Campofrío","ElPozo","Telepizza","100 Montaditos","Tous","Loewe","Camper","Banco Santander","BBVA","La Casera","Donettes","Phoskitos","Bollycao","Tigretón","Pantera Rosa","Vips","Glovo","Wallapop","Idealista","Cabify","Freixenet","Font Vella","Puleva","Central Lechera Asturiana","Pescanova","Calvo","Gallina Blanca","Avecrem","Cuétara","Lacasitos","Conguitos","Kas","Fanta Limón? no","Natura Bissé","Cupra","Renfe","Correos","Once (cupón)"]},
+ {id:"infancia",name:"Dibujos e infancia",emo:"🧸",color:"#ffc9de",words:["Mortadelo y Filemón","Zipi y Zape","Superlópez","Capitán Trueno","D'Artacán","David el Gnomo","La vuelta al mundo de Willy Fog","Los Fruittis","Espinete","Don Pimpón","Pocoyó","Los Lunnis","Las tres mellizas","Heidi","Marco","Oliver y Benji","Bola de Dragón","Pokémon","Doraemon","Shin Chan","Los Simpson","Los Pitufos","La abeja Maya","Mazinger Z","Chicho Terremoto","Los Fraggle","Teletubbies","Peppa Pig","Dora la exploradora","Bob Esponja","Las Supernenas","Digimon","Tamagotchi","Tazos","Tiburón (juego)","Cromos","Game Boy","Las chuches","El Tragabolas","Pin y Pon","Nenuco","Nancy","Barriguitas","Scalextric","Furby","Tente","El Coyote y el Correcaminos","Snoopy","Tom y Jerry","Naranjito","Cobi","Curro (Expo 92)"]},
+ {id:"mimica",name:"Mímica (acciones)",emo:"🕺",color:"#63e6be",words:["Conducir","Nadar","Bailar sevillanas","Hacer la croqueta","Tocar la guitarra","Planchar","Pescar","Montar a caballo","Cocinar una paella","Torear","Echarse la siesta","Hacer surf","Bailar reguetón","Comer las uvas","Hacerse un selfie","Lavarse los dientes","Jugar al pádel","Saltar a la comba","Ir en patinete","Tocar el cajón","Cantar en un karaoke","Hacer yoga","Boxear","Ordeñar una vaca","Hacer la cama","Esquiar","Jugar a la Play","Hacer un TikTok","Tirar un penalti","Correr un maratón","Recoger aceitunas","Pedir un taxi","Hacer palmas","Bailar la Macarena","Montar en bici","Escalar","Hacer flexiones","Cambiar un pañal","Tender la ropa","Jugar al mus","Hacer castells","Pasear al perro","Afeitarse","Maquillarse","Coger el metro en hora punta","Dar el pésame","Ligar en una discoteca","Hacer la ola","Cortar jamón","Abrir una botella de cava"]},
+ {id:"expresiones",name:"Expresiones españolas",emo:"💬",color:"#ffd8a8",words:["Estar como una cabra","Ponerse las botas","Tirar la casa por la ventana","Ser pan comido","Estar en las nubes","Dar calabazas","Ponerse como un tomate","Tomar el pelo","Estar hasta las narices","Meter la pata","Ser un pez gordo","Costar un ojo de la cara","Echar una mano","Estar sin blanca","Hablar por los codos","Ser uña y carne","No tener pelos en la lengua","Buscarle tres pies al gato","Más vale pájaro en mano","A buenas horas, mangas verdes","Ser la leche","Estar de mala leche","Quedarse frito","Ir al grano","Pillar el toro","Dormir como un tronco","Llover a cántaros","Hacer el ganso","Darle a la lengua","Ser un cero a la izquierda","Estar como un fideo","Tener mala pata","Montar un pollo","Flipar en colores","Ir de punta en blanco","Echar balones fuera","Ser más feo que Picio","Cada mochuelo a su olivo","En casa del herrero, cuchillo de palo","Al pan, pan y al vino, vino"]},
+];
+// limpia entradas marcadas con "no" (descartes) y duplicados
+CATS.forEach(c=>{c.words=[...new Set(c.words.filter(w=>!/\?\s*no$/i.test(w)))];});
+const FAM=["cantantes","actores","humor","tv","influencers","futbol","deportes","historia"];
+CATS.push({id:"famosos",name:"Famosos de España (mezcla)",emo:"⭐",color:"#ffe8a3",words:[...new Set(CATS.filter(c=>FAM.includes(c.id)).flatMap(c=>c.words))]});
+CATS.push({id:"mix",name:"¡Mezcla total!",emo:"🎲",color:"#ffffff",words:[...new Set(CATS.flatMap(c=>c.words))]});
+
+/* ---------- estado ---------- */
+const $=id=>document.getElementById(id);
+let settings={time:60,invert:false,sound:true,music:true};
+try{Object.assign(settings,JSON.parse(localStorage.getItem("alafrente")||"{}"));}catch(e){}
+const save=()=>{try{localStorage.setItem("alafrente",JSON.stringify(settings));}catch(e){}};
+
+let cat=null, deck=[], idx=0, results=[], timeLeft=0, tick=null, state="idle";
+let motionOK=false, gotMotion=false, neutral=true, lastAction=0;
+
+function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));$(id).classList.add("active");}
+
+/* ---------- home ---------- */
+function renderHome(){
+  const g=$("grid"); g.innerHTML="";
+  CATS.forEach(c=>{
+    const b=document.createElement("button");b.className="cat";b.style.background=c.color;
+    b.innerHTML=`<span class="emo">${c.emo}</span><span><div class="name">${c.name}</div><div class="count">${c.words.length} tarjetas</div></span>`;
+    b.onclick=()=>pickCat(c); g.appendChild(b);
+  });
+  document.querySelectorAll("#timeSel .pill").forEach(p=>{
+    p.classList.toggle("on",+p.dataset.t===settings.time);
+    p.onclick=()=>{settings.time=+p.dataset.t;save();renderHome();};
+  });
+  $("invertBtn").classList.toggle("on",settings.invert);
+  $("soundBtn").classList.toggle("on",settings.sound);
+  $("musicBtn").classList.toggle("on",settings.music);
+}
+$("invertBtn").onclick=()=>{settings.invert=!settings.invert;save();renderHome();};
+$("soundBtn").onclick=()=>{settings.sound=!settings.sound;save();renderHome();};
+$("musicBtn").onclick=()=>{settings.music=!settings.music;save();renderHome();
+  if(settings.music)Music.play("menu");else Music.stop();};
+$("rulesBtn").onclick=()=>show("rules");
+$("rulesOk").onclick=()=>show("home");
+
+function pickCat(c){cat=c;$("readyCat").textContent=c.name;show("ready");}
+$("backBtn").onclick=()=>show("home");
+
+/* ---------- sonido ---------- */
+let actx=null;
+function beep(freq,dur=0.15,type="sine",vol=0.25){
+  if(!settings.sound)return;
+  try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    const o=actx.createOscillator(),g=actx.createGain();o.type=type;o.frequency.value=freq;
+    g.gain.setValueAtTime(vol,actx.currentTime);g.gain.exponentialRampToValueAtTime(0.001,actx.currentTime+dur);
+    o.connect(g).connect(actx.destination);o.start();o.stop(actx.currentTime+dur);}catch(e){}
+}
+const sOk=()=>{beep(660,.12);setTimeout(()=>beep(990,.18),110);};
+const sPass=()=>beep(220,.25,"square",.15);
+const sTick=()=>beep(880,.06,"sine",.15);
+const sEnd=()=>{beep(523,.2);setTimeout(()=>beep(392,.2),180);setTimeout(()=>beep(262,.4),360);};
+/* ---------- música (sintetizada, sin archivos) ---------- */
+const Music={
+  mode:null,timer:null,step:0,next:0,bpm:120,gain:null,noise:null,
+  ctx(){actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    if(!this.gain){this.gain=actx.createGain();this.gain.gain.value=0.5;this.gain.connect(actx.destination);
+      const b=actx.createBuffer(1,actx.sampleRate*0.2,actx.sampleRate),d=b.getChannelData(0);
+      for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;this.noise=b;}
+    return actx;},
+  play(mode){
+    if(!settings.music){this.stop();return;}
+    try{const c=this.ctx();c.resume&&c.resume();
+      if(this.mode===mode)return;
+      this.mode=mode;this.bpm=mode==="menu"?104:136;this.step=0;this.next=c.currentTime+0.05;
+      clearInterval(this.timer);this.timer=setInterval(()=>this.sched(),25);}catch(e){}
+  },
+  stop(){clearInterval(this.timer);this.timer=null;this.mode=null;},
+  fast(on){if(this.mode==="game")this.bpm=on?168:136;},
+  note(f,t,d,type,v){const o=actx.createOscillator(),g=actx.createGain();o.type=type;o.frequency.value=f;
+    g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(v,t+0.01);g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+    o.connect(g).connect(this.gain);o.start(t);o.stop(t+d+0.02);},
+  kick(t){const o=actx.createOscillator(),g=actx.createGain();o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(40,t+0.12);
+    g.gain.setValueAtTime(0.5,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.15);o.connect(g).connect(this.gain);o.start(t);o.stop(t+0.16);},
+  hat(t,v=0.08){const s=actx.createBufferSource(),f=actx.createBiquadFilter(),g=actx.createGain();s.buffer=this.noise;
+    f.type="highpass";f.frequency.value=7000;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.05);
+    s.connect(f).connect(g).connect(this.gain);s.start(t);s.stop(t+0.06);},
+  sched(){
+    const mf=m=>440*Math.pow(2,(m-69)/12);
+    // progresión I–V–vi–IV en Do
+    const chords=[[60,64,67],[55,59,62],[57,60,64],[53,57,60]];
+    const mel=[0,1,2,1,2,1,0,2, 0,2,1,2,0,1,2,1];
+    while(this.next<actx.currentTime+0.12){
+      const t=this.next,s=this.step,bar=Math.floor(s/16)%4,ch=chords[bar],sx=s%16,eighth=60/this.bpm/2;
+      if(this.mode==="game"){
+        if(sx%4===0)this.kick(t);
+        if(sx%2===1)this.hat(t);
+        if(sx%4===0||sx%4===3)this.note(mf(ch[0]-24),t,eighth*0.9,"triangle",0.35);
+        this.note(mf(ch[mel[sx]]+12),t,eighth*0.6,"square",0.06);
+        if(sx===0||sx===8)this.note(mf(ch[2]+12),t,eighth*3,"sawtooth",0.025);
+      }else{
+        if(sx%4===0)this.note(mf(ch[0]-12),t,eighth*3.5,"triangle",0.22);
+        if(sx%2===0)this.note(mf(ch[mel[sx]]+12),t,eighth*1.6,"triangle",0.08);
+        if(sx%8===4)this.hat(t,0.03);
+      }
+      this.next+=eighth;this.step++;
+    }
+  }
+};
+// la música de menú arranca con el primer toque (los navegadores lo exigen)
+document.addEventListener("pointerdown",function first(){document.removeEventListener("pointerdown",first);
+  if(state==="idle")Music.play("menu");},{once:true});
+
+const vib=p=>{try{navigator.vibrate&&navigator.vibrate(p);}catch(e){}};
+
+/* ---------- sensores ---------- */
+const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+async function enableMotion(){
+  try{
+    if(typeof DeviceMotionEvent!=="undefined"&&typeof DeviceMotionEvent.requestPermission==="function"){
+      const r=await DeviceMotionEvent.requestPermission(); if(r!=="granted")return false;
+    }
+    if(!("DeviceMotionEvent" in window))return false;
+    window.addEventListener("devicemotion",onMotion);
+    motionOK=true; return true;
+  }catch(e){return false;}
+}
+let zf=0;
+function onMotion(e){
+  const a=e.accelerationIncludingGravity; if(!a||a.z==null)return;
+  gotMotion=true;
+  let z=a.z*(isIOS?-1:1);           // z>0 → pantalla mirando al techo
+  zf=zf*0.6+z*0.4;
+  if(state==="countdown"){ if(Math.abs(zf)<4) cdReady=true; return; }
+  if(state!=="playing")return;
+  if(Math.abs(zf)<3.5){neutral=true;return;}
+  if(!neutral||Date.now()-lastAction<700)return;
+  if(zf>7.2){neutral=false;act(settings.invert?"pass":"ok");}
+  else if(zf<-7.2){neutral=false;act(settings.invert?"ok":"pass");}
+}
+
+/* ---------- partida ---------- */
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;}
+let cdReady=false;
+
+$("startBtn").onclick=async()=>{
+  try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();actx.resume&&actx.resume();}catch(e){}
+  try{const el=document.documentElement; if(el.requestFullscreen) await el.requestFullscreen(); else if(el.webkitRequestFullscreen) el.webkitRequestFullscreen();}catch(e){}
+  try{await screen.orientation.lock("landscape");}catch(e){}
+  if(!motionOK) await enableMotion();
+  startCountdown();
+};
+
+function startCountdown(){
+  deck=shuffle(cat.words);idx=0;results=[];cdReady=false;state="countdown";
+  show("countdown");Music.play("game");
+  let n=3;$("cdNum").textContent=n;$("cdHint").textContent="¡Colócalo en la frente!";
+  // espera 1,5 s para que dé tiempo a ponérselo, luego cuenta
+  setTimeout(function step(){
+    sTick();
+    const t=setInterval(()=>{
+      n--; if(n>0){$("cdNum").textContent=n;sTick();}
+      else{clearInterval(t);startGame();}
+    },1000);
+  },1500);
+}
+
+function startGame(){
+  state="playing";neutral=true;lastAction=Date.now();
+  timeLeft=settings.time;
+  $("gameCat").textContent=cat.emo+" "+cat.name;
+  $("score").textContent="0";
+  updateTimer();
+  showWord();
+  show("game");
+  // mostrar zonas táctiles si no llegan datos del sensor
+  setTimeout(()=>{const t=!gotMotion;$("taplabels").style.display=t?"flex":"none";},600);
+  $("taplabels").style.display=gotMotion?"none":"flex";
+  clearInterval(tick);
+  tick=setInterval(()=>{
+    if(state!=="playing"&&state!=="feedback")return;
+    timeLeft--;updateTimer();
+    if(timeLeft<=5&&timeLeft>0)sTick();
+    Music.fast(timeLeft<=10);
+    if(timeLeft<=0)endGame();
+  },1000);
+}
+function updateTimer(){const t=$("timer");t.textContent=timeLeft;t.classList.toggle("low",timeLeft<=10);}
+function showWord(){
+  if(idx>=deck.length){deck=deck.concat(shuffle(cat.words));}
+  const w=deck[idx];const el=$("word");el.textContent=w;
+  el.style.fontSize=w.length>28?"clamp(28px,8vmin,80px)":w.length>16?"clamp(32px,10vmin,100px)":"";
+}
+function act(kind){
+  if(state!=="playing")return;
+  lastAction=Date.now();
+  results.push({w:deck[idx],ok:kind==="ok"});
+  idx++;
+  $("score").textContent=results.filter(r=>r.ok).length;
+  state="feedback";
+  const fb=$("feedback");fb.className="screen active "+kind;
+  $("fbText").textContent=kind==="ok"?"¡CORRECTO!":"PASO";
+  document.querySelectorAll(".screen").forEach(s=>{if(s!==fb)s.classList.remove("active");});
+  if(kind==="ok"){sOk();vib(80);}else{sPass();vib([40,40,40]);}
+  setTimeout(()=>{if(state!=="feedback")return;state="playing";showWord();show("game");},800);
+}
+$("tapOk").onclick=()=>act(settings.invert?"pass":"ok");
+$("tapPass").onclick=()=>act(settings.invert?"ok":"pass");
+document.addEventListener("keydown",e=>{
+  if(e.key==="ArrowUp"||e.key==="ArrowRight")act("ok");
+  if(e.key==="ArrowDown"||e.key==="ArrowLeft")act("pass");
+});
+$("quitBtn").onclick=e=>{e.stopPropagation();clearInterval(tick);state="idle";exitFS();Music.play("menu");show("home");};
+
+function endGame(){
+  clearInterval(tick);
+  if(state==="playing"&&deck[idx]) results.push({w:deck[idx],ok:false,last:true});
+  state="idle";Music.stop();sEnd();vib([200,100,200]);
+  setTimeout(()=>Music.play("menu"),2500);
+  const fb=$("feedback");fb.className="screen active time";$("fbText").textContent="¡TIEMPO!";
+  document.querySelectorAll(".screen").forEach(s=>{if(s!==fb)s.classList.remove("active");});
+  setTimeout(()=>{exitFS();showResults();},1600);
+}
+function exitFS(){try{screen.orientation.unlock&&screen.orientation.unlock();}catch(e){}
+  try{if(document.fullscreenElement)document.exitFullscreen();else if(document.webkitFullscreenElement)document.webkitExitFullscreen();}catch(e){}}
+function showResults(){
+  const ok=results.filter(r=>r.ok).length;
+  $("resTotal").textContent=ok;
+  $("resSub").textContent=`${ok===1?"acierto":"aciertos"} de ${results.length} · ${cat.name}`;
+  $("resList").innerHTML=results.map(r=>`<div class="${r.ok?"r-ok":"r-pass"}"><span>${r.w}</span><span>${r.ok?"✓":"✗"}</span></div>`).join("");
+  show("results");
+}
+$("againBtn").onclick=()=>show("ready");
+$("homeBtn").onclick=()=>show("home");
+
+/* ---------- aviso de sensor ---------- */
+(function(){
+  const n=$("sensorNote");
+  const inFrame=window.self!==window.top;
+  if(inFrame) n.innerHTML="⚠️ Aquí dentro el sensor de movimiento puede estar bloqueado: si no responde al inclinar, <b>toca la mitad derecha (acierto) o izquierda (paso)</b> de la pantalla.";
+  else n.innerHTML="Si el movimiento no funciona, también puedes <b>tocar la mitad derecha (acierto) o izquierda (paso)</b>.";
+})();
+renderHome();
+</script>
+</body>
+</html>
